@@ -29,15 +29,26 @@ NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Owner in buildin
 # Quality of housing for people who rent vs. own
 
 Own <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% filter(`Mortgage Status` == 1 | `Mortgage Status` == 2)
-Own %>% select(`Mortgage Status`) %>% View()
+#Own %>% select(`Mortgage Status`) %>% View()
 
 Rent <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% filter(`Mortgage Status` == 9)
  # More people rent vs own
 
 # Surprising: Owner's have more breakdowns of heating equipment than renters do
-Rent %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown`), total = n(), ratio = heat_break/total) %>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(size = `First Occupants of Unit`))
-Own %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown`), total = n(), ratio = heat_break/total)%>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(size = `First Occupants of Unit`))
+# Conditions: 1=Dilapidated, 2=Sound, 3=Deteriorating, 8=Not reported
+# First Occupant: 1=Yes, first occupants, 2=No, previously occupied, 3=Don't know, 8=Not reported
 
-Rent %>% group_by(`Condition of building`) %>% summarise(heat_break = sum(`Toilet breakdowns`), total = n(), ratio = heat_break/total)
-Own %>% group_by(`Condition of building`) %>% summarise(heat_break = sum(`Toilet breakdowns`), total = n(), ratio = heat_break/total)
+Rent %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), ratio = heat_break/total) %>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(color = factor(`First Occupants of Unit`)))
+Own %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown`== 0), total = n(), ratio = heat_break/total)  %>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(size = factor(`First Occupants of Unit`)))
 
+Rent %>% group_by(`Condition of building`) %>% summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), ratio = toilet_break/total)
+Own %>% group_by(`Condition of building`) %>% summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), ratio = toilet_break/total)
+
+# On average people own at higher ages
+Rent %>% summarise(average = mean(`Householder's Age Recode`))
+Own %>% summarise(average = mean(`Householder's Age Recode`))
+
+names(NYCHVS_2017_Occupied_File_for_ASA_Challenge)[3] <- "Slope_walls"
+NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Mortgage Status`)) + geom_bar(aes(fill = factor(Slope_walls)))
+
+NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Mortgage Status`)) + geom_bar(aes(fill = factor(Slope_walls)))
