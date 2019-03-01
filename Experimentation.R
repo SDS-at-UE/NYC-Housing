@@ -1,27 +1,51 @@
 library(readr)
 library(tidyverse)
 set.seed(6969)
-NYCHVS_1991_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 1991 Occupied File for ASA Challenge.csv", skip = 1)
-View(NYCHVS_1991_Occupied_File_for_ASA_Challenge)
 
-NYCHVS_1993_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 1993 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_1996_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 1996 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_1999_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 1999 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2002_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2002 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2005_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2005 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2008_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2008 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2011_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2011 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2014_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2014 Occupied File for ASA Challenge.csv", skip = 1)
-NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2017 Occupied File for ASA Challenge.csv", skip = 1)
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
 
-samp <- sample_frac(NYCHVS_1991_Occupied_File_for_ASA_Challenge, .25)
+### full_data <- bind_rows(dta[[1]], 
+                       dta[[2]],
+                       dta[[3]],
+                       dta[[4]],
+                       dta[[5]],
+                       dta[[6]],
+                       dta[[7]],
+                       dta[[8]],
+                       dta[[9]],
+                       dta[[10]]
+                       )
+
+NYC <- dta[[1]] %>% 
+  select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
+         `Monthly cost (gas)`, `Combined gas and electric`, 
+         `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
+         `Sub-Borough Area`, `Borough and Sub-Borough Area`,
+         `Year Identifier`) 
+for (i in 2:10) {
+  dta[[i]] %>% 
+    select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
+           `Monthly cost (gas)`, `Combined gas and electric`, 
+           `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
+           `Sub-Borough Area`, `Borough and Sub-Borough Area`,
+           `Year Identifier`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
 
 ## Electricity
-elec91 <-NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Electricity paid separately` == 3, !(`Monthly cost (electric)` %in% c(998, 999))) 
+elec91 <-dta[[1]] %>% 
+  filter(`Electricity paid separately` == 3, 
+         !(`Monthly cost (electric)` %in% c(998, 999))) 
 
-elec93 <-NYCHVS_1993_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Electricity paid separately` == 3, !(`Monthly cost (electric)` %in% c(998, 999))) 
+elec93 <-dta[[2]] %>% 
+  filter(`Electricity paid separately` == 3, 
+         !(`Monthly cost (electric)` %in% c(998, 999))) 
 
 elec93 %>% 
   ggplot(aes(x = factor(Borough), y = `Monthly cost (electric)`)) + geom_boxplot() 
@@ -29,11 +53,11 @@ elec93 %>%
 
 ## Gas
 #### 1991
-gas91 <-NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas91 <-dta[[1]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
-gas %>% 
-  ggplot(aes(x = `Monthly cost (gas)`)) +   geom_histogram(binwidth = 10) + 
+gas91 %>% 
+  ggplot(aes(x = `Monthly cost (gas)`)) + geom_histogram(binwidth = 10) + 
     coord_cartesian(xlim = c(0, 200))
 
 ## Difference in average cost of gas bill compared by borough
@@ -43,8 +67,8 @@ gas91  %>%
 ### Manhattan is the lowest on average, but lots of big outliers
 
 #### 1993
-gas93 <-NYCHVS_1993_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas93 <-dta[[2]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas93 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -52,8 +76,8 @@ gas93 %>%
 ### Manhattan and the Bronx are lowest, both have lots of high outliers
 
 #### 1996
-gas96 <- NYCHVS_1996_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas96 <- dta[[3]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas96 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -62,8 +86,8 @@ gas96 %>%
 ### Staten Island highest, outliers on both sides
 
 #### 1999
-gas99 <-NYCHVS_1999_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas99 <-dta[[4]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas99 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -71,8 +95,8 @@ gas99 %>%
 ### Similar to 1996
 
 #### 2002
-gas02 <-NYCHVS_2002_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas02 <-dta[[5]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas02 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -80,8 +104,8 @@ gas02 %>%
 ### Similar
 
 #### 2005
-gas05 <-NYCHVS_2005_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas05 <-dta[[6]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas05 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -89,8 +113,8 @@ gas05 %>%
 ### Similar
 
 #### 2008
-gas08 <-NYCHVS_2008_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas08 <-dta[[7]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas08 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -98,8 +122,8 @@ gas08 %>%
 ### Similar
 
 #### 2011
-gas11 <-NYCHVS_2011_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas11 <-dta[[8]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas11 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -107,8 +131,8 @@ gas11 %>%
 ### Similar
 
 #### 2014
-gas14 <-NYCHVS_2014_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas14 <-dta[[9]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas14 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
@@ -116,18 +140,28 @@ gas14 %>%
 ### Similar
 
 #### 2017
-gas17 <-NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% 
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999))) 
+gas17 <-dta[[10]] %>% 
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
 gas17 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
   geom_boxplot() + scale_y_log10()
+### Similar
 
+#### Entire Data Set
+NYC %>%
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
 
+NYC %>%
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999)))
+
+NYC %>%
+  ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
+  geom_boxplot() + scale_y_log10()
 
 ## Gas/electric
 #### 1991
-gaselec91 <- NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% 
+gaselec91 <- dta[[1]] %>% 
   filter(!(`Combined gas and electric` %in% c(998, 999)))
 ### Similar, but Manhattan's average increased relative to other boroughs
 
@@ -137,7 +171,7 @@ gaselec91 %>%
   geom_boxplot() + scale_y_log10()
 
 #### 1993
-gaselec93 <- NYCHVS_1993_Occupied_File_for_ASA_Challenge %>% 
+gaselec93 <- dta[[2]] %>% 
   filter(!(`Combined gas and electric` %in% c(998, 999)))
 
 
@@ -147,7 +181,7 @@ gaselec93 %>%
 
 
 ## Water
-water91 <-NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% 
+water91 <-dta[[1]] %>% 
   filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999))) 
 
 ## Distribution of water bill amount
@@ -167,7 +201,7 @@ water91 %>%
   count(Borough, `Sub-Borough Area`) %>% View()
 
 #### 1993
-water93 <-NYCHVS_1993_Occupied_File_for_ASA_Challenge %>% 
+water93 <-dta[[2]] %>% 
   filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999))) 
 
 ## Distribution of water bill amount
