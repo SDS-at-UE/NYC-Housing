@@ -64,27 +64,41 @@ NYCHVS_2017_Occupied_File_for_ASA_Challenge  %>% group_by(Borough) %>% summarise
   ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
 # Staten Island is least populated out of the 5 Boroughs. The Demand in the housing market is therefore less
 # Resulting in lower house costs
-                                             skip = 1)
 
 
-NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2017 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2014_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2014 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2011_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2011 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2008_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2008 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2005_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2005 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2002_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2002 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1999_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1999 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1996_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1996 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1993_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1993 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1991_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1991 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
 
+# Combining data sets
+
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
+
+NYC <- dta[[1]] %>% select(`Reason for Moving`, `Mortgage Status`, 
+                           `Year Identifier`, `Tenure 1`, 
+                           `Condition of building`, 
+                           `Heating equipment breakdown`, 
+                           `Toilet breakdowns`, `First Occupants of Unit`) 
+for (i in 2:10) {
+  dta[[i]] %>% select(`Reason for Moving`, `Mortgage Status`, 
+                      `Year Identifier`, `Tenure 1`, 
+                      `Condition of building`, 
+                      `Heating equipment breakdown`, 
+                      `Toilet breakdowns`, `First Occupants of Unit`, 
+                      `Number of rooms`, `Number of bedrooms`, 
+                      `Presence of mice or rats`,
+                      Borough, `Borough and Sub-Borough Area`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
+
+
+
+NYC %>% group_by(Borough) %>% summarise(total = n(),
+       total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+       Own = total_own/total, Rent = total_rent/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Own, Rent) %>%
+  ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
