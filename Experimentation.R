@@ -26,14 +26,14 @@ NYC <- dta[[1]] %>%
          `Monthly cost (gas)`, `Combined gas and electric`, 
          `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
          `Sub-Borough Area`, `Borough and Sub-Borough Area`,
-         `Year Identifier`) 
+         `Year Identifier`, `Number of rooms`) 
 for (i in 2:10) {
   dta[[i]] %>% 
     select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
            `Monthly cost (gas)`, `Combined gas and electric`, 
            `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
            `Sub-Borough Area`, `Borough and Sub-Borough Area`,
-           `Year Identifier`) %>%
+           `Year Identifier`, `Number of rooms`) %>%
     bind_rows(NYC) -> 
     NYC
 }
@@ -43,6 +43,13 @@ NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+NYC %>% ggplot(aes(x = `Number of rooms`, fill = Borough)) + geom_bar()
+total <- NYC %>% count(Borough, `Number of rooms`) 
+total %>% ggplot(aes(fill = `Number of rooms`, y = percent, x = Borough)) + 
+  geom_bar(stat = "identity") + 
+  scale_fill_gradientn(colors = c("pink", "red", "purple", "blue", "black"))
+
 
 for (i in 1:10) {
   dta[[i]] <- dta[[i]] %>% 
@@ -340,3 +347,11 @@ water93 %>% filter(Borough == 1) %>%
 
 water93 %>%
   count(Borough, `Sub-Borough Area`) %>% View()
+
+
+
+
+
+
+Own <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% 
+  filter(`Mortgage Status` == 1 | `Mortgage Status` == 2)
