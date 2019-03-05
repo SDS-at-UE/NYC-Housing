@@ -10,30 +10,30 @@ for (i in 1:10) {
 }
 
 ### full_data <- bind_rows(dta[[1]], 
-                       dta[[2]],
-                       dta[[3]],
-                       dta[[4]],
-                       dta[[5]],
-                       dta[[6]],
-                       dta[[7]],
-                       dta[[8]],
-                       dta[[9]],
-                       dta[[10]]
-                       )
+#                       dta[[2]],
+#                       dta[[3]],
+#                       dta[[4]],
+#                       dta[[5]],
+#                       dta[[6]],
+#                       dta[[7]],
+#                       dta[[8]],
+#                       dta[[9]],
+#                       dta[[10]]
+#                       )
 
 NYC <- dta[[1]] %>% 
   select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
          `Monthly cost (gas)`, `Combined gas and electric`, 
          `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
          `Sub-Borough Area`, `Borough and Sub-Borough Area`,
-         `Year Identifier`) 
+         `Year Identifier`, `Number of rooms`, `Tenure 1`) 
 for (i in 2:10) {
   dta[[i]] %>% 
     select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
            `Monthly cost (gas)`, `Combined gas and electric`, 
            `Water and sewer paid separately`, `Yearly cost (water sewer)`, 
            `Sub-Borough Area`, `Borough and Sub-Borough Area`,
-           `Year Identifier`) %>%
+           `Year Identifier`, `Number of rooms`, `Tenure 1`) %>%
     bind_rows(NYC) -> 
     NYC
 }
@@ -43,6 +43,13 @@ NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+NYC %>% ggplot(aes(x = `Number of rooms`, fill = Borough)) + geom_bar()
+total <- NYC %>% count(Borough, `Number of rooms`) %>% group_by(Borough) %>%
+  mutate(percent = n/sum(n))
+total %>% ggplot(aes(fill = `Number of rooms`, y = percent, x = Borough)) + 
+  geom_bar(stat = "identity") + 
+  scale_fill_gradientn(colors = c("pink", "red", "purple", "blue", "black"))
 
 for (i in 1:10) {
   dta[[i]] <- dta[[i]] %>% 
@@ -302,41 +309,173 @@ NYC %>%
 
 
 ## Water
-water91 <-dta[[1]] %>% 
-  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999))) 
+water91 <- dta[[1]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
 
-## Distribution of water bill amount
-water91 %>%
-  ggplot(aes(x = `Yearly cost (water sewer)`)) + geom_histogram(binwidth = 50)
 
 ## Difference in average cost of water bill compared by borough
 water91 %>%
-  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
 ### Queens has lots of outliers (#4)  
 
-## Separation into sub-boroughs
-water91 %>% filter(Borough == 1) %>%
-  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
-
-water91 %>%
-  count(Borough, `Sub-Borough Area`) %>% View()
 
 #### 1993
 water93 <-dta[[2]] %>% 
-  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999))) 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
 
-## Distribution of water bill amount
 water93 %>%
-  ggplot(aes(x = `Yearly cost (water sewer)`)) + geom_histogram(binwidth = 50)
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan has a substantially higher average than everywhere else
 
-## Difference in average cost of water bill compared by borough
-water93 %>%
-  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+
+#### 1996
+water96 <-dta[[3]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water96 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan has a precipitous drop in water costs, now by far the lowest.  Seems to be a cluster around 100,
+### but nothing in the data description indicates that being a number meaning anything in particular.
+### Further exploration below!!!
+
+#### 1999
+water99 <-dta[[4]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water99 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan back to biggest average, large spread
+
+
+#### 2002
+water02 <-dta[[5]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water02 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan spread tiny, all 5 pretty equal
+
+
+#### 2005
+water05 <-dta[[6]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water05 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan's spread is insane
+
+#### 2008
+water08 <-dta[[7]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water08 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan super small, large outliers for the other four boroughs, particularly Staten Island
+
+#### 2011
+water11 <-dta[[8]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water11 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Similar to 2011
+
+
+#### 2014
+water14 <-dta[[9]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water14 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Similar to 2011
+
+
+#### 2017
+water17 <-dta[[10]] %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) 
+
+water17 %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() +
+  xlab("Boroughs") + ylab("Yearly Cost (Water)")
+### Manhattan man, this is so weird. Check for small sample size?
+
+#### MANHATTAN HAS A VERY SMOL SAMPLE SIZE, approx 45 per year
+NYC %>% filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999)),
+               Borough == "Manhattan") %>% View()
+
+#### Whole data set
+NYC %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(Borough), y = `Yearly cost (water sewer)`)) + 
+  geom_boxplot() + 
+  xlab("Boroughs") + ylab("Year Cost (Water)")
+### Extreme outliers are due to high topcode values in 2011 and 2014
+### All boroughs pretty equal in water bills
+
+NYC %>% filter(Borough == "Manhattan") %>%
+  summarise(total = n(), total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+            Own = total_own/total, Rent = total_rent/total) %>% View()
+
+NYC %>% filter(Borough == "Bronx") %>%
+  summarise(total = n(), total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+            Own = total_own/total, Rent = total_rent/total) %>% View()
+
+NYC %>% filter(Borough == "Brooklyn") %>%
+  summarise(total = n(), total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+            Own = total_own/total, Rent = total_rent/total) %>% View()
+
+NYC %>% filter(Borough == "Queens") %>%
+  summarise(total = n(), total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+            Own = total_own/total, Rent = total_rent/total) %>% View()
+
+NYC %>% filter(Borough == "Staten Island") %>%
+  summarise(total = n(), total_own = sum(`Tenure 1` == 1), total_rent = sum(`Tenure 1` == 9),
+            Own = total_own/total, Rent = total_rent/total) %>% View()
+
+
+######### DO NOT INCLUDE IN PRESENTATION
 
 ## Separation into sub-boroughs
-water93 %>% filter(Borough == 1) %>%
-  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + 
-  geom_boxplot()
+NYC %>% filter(Borough == "Manhattan") %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
 
-water93 %>%
-  count(Borough, `Sub-Borough Area`) %>% View()
+NYC %>% filter(Borough == "Bronx") %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+
+NYC %>% filter(Borough == "Queens") %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+
+NYC %>% filter(Borough == "Staten Island") %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+
+NYC %>% filter(Borough == "Brooklyn") %>%
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  ggplot(aes(x = factor(`Sub-Borough Area`), y = `Yearly cost (water sewer)`)) + geom_boxplot()
+
+### Manhattan's sample sizes very low
+NYC %>% 
+  filter(`Water and sewer paid separately` == 1, !(`Yearly cost (water sewer)` %in% c(998,999,9999))) %>%
+  group_by(Borough, `Sub-Borough Area`) %>% count() %>% View()
