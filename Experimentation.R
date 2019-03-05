@@ -38,6 +38,22 @@ for (i in 2:10) {
     NYC
 }
 
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 1, "Bronx", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+for (i in 1:10) {
+  dta[[i]] <- dta[[i]] %>% 
+    mutate(Borough = ifelse(Borough == 1, "Bronx", Borough),
+           Borough = ifelse(Borough == 2, "Brooklyn", Borough),
+           Borough = ifelse(Borough == 3, "Manhattan", Borough),
+           Borough = ifelse(Borough == 4, "Queens", Borough),
+           Borough = ifelse(Borough == 5, "Staten Island", Borough))
+}
+
+
 ## Electricity
 elec91 <-dta[[1]] %>% 
   filter(`Electricity paid separately` == 3, 
@@ -63,7 +79,8 @@ gas91 %>%
 ## Difference in average cost of gas bill compared by borough
 gas91  %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Manhattan is the lowest on average, but lots of big outliers
 
 #### 1993
@@ -72,7 +89,8 @@ gas93 <-dta[[2]] %>%
 
 gas93 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Manhattan and the Bronx are lowest, both have lots of high outliers
 
 #### 1996
@@ -81,7 +99,8 @@ gas96 <- dta[[3]] %>%
 
 gas96 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Manhattan the lowest, Bronx and Manhattan high outliers
 ### Staten Island highest, outliers on both sides
 
@@ -91,7 +110,8 @@ gas99 <-dta[[4]] %>%
 
 gas99 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar to 1996
 
 #### 2002
@@ -100,7 +120,8 @@ gas02 <-dta[[5]] %>%
 
 gas02 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### 2005
@@ -109,7 +130,8 @@ gas05 <-dta[[6]] %>%
 
 gas05 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### 2008
@@ -118,7 +140,8 @@ gas08 <-dta[[7]] %>%
 
 gas08 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### 2011
@@ -127,7 +150,8 @@ gas11 <-dta[[8]] %>%
 
 gas11 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### 2014
@@ -136,7 +160,8 @@ gas14 <-dta[[9]] %>%
 
 gas14 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### 2017
@@ -145,19 +170,18 @@ gas17 <-dta[[10]] %>%
 
 gas17 %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
 ### Similar
 
 #### Entire Data Set
 NYC %>%
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) 
-
-NYC %>%
-  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999)))
-
-NYC %>%
+  filter(`Gas paid separately`== 1, !(`Monthly cost (gas)` %in% c(998, 999, 9999))) %>%
   ggplot(aes(x = factor(Borough), y = `Monthly cost (gas)`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas)")
+
+
 
 ## Gas/electric
 #### 1991
@@ -168,16 +192,113 @@ gaselec91 <- dta[[1]] %>%
 ## Difference in average cost of gas/electricity bill compared by borough
 gaselec91 %>% 
   ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Staten Island most expensive by far, other 4 relatively equal
+### high outliers for Bronx, high and low outliers for Manhattan
+
 
 #### 1993
 gaselec93 <- dta[[2]] %>% 
   filter(!(`Combined gas and electric` %in% c(998, 999)))
 
-
 gaselec93 %>% 
   ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
-  geom_boxplot() + scale_y_log10()
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Staten Island still most expensive barely
+### Manhattan still with outliers on both sides
+### All relatively close
+
+
+#### 1996
+gaselec96 <- dta[[3]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec96 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### All relatively close, some outliers for each
+
+#### 1999
+gaselec99 <- dta[[4]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec99 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Similar
+
+#### 2002
+gaselec02 <- dta[[5]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec02 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Staten Island and Brooklyn average almost the same
+### Manhattan still with weird outliers
+
+#### 2005
+gaselec05 <- dta[[6]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec05 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Similar story
+
+#### 2008
+gaselec08 <- dta[[7]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec08 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Similar story, Staten Island's spread becomes huge for some reason
+
+#### 2011
+gaselec11 <- dta[[8]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec11 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Queens jumps into second, Manhattan with a ton of outliers
+
+#### 2014
+gaselec14 <- dta[[9]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec14 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Similar
+
+#### 2017
+gaselec17 <- dta[[10]] %>% 
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999)))
+
+gaselec17 %>% 
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+### Similar
+
+#### Whole data set
+NYC %>%
+  filter(!(`Combined gas and electric` %in% c(998, 999, 9999))) %>%
+  ggplot(aes(x = factor(Borough), y = `Combined gas and electric`)) + 
+  geom_boxplot() + scale_y_log10() +
+  xlab("Boroughs") + ylab("Monthly Cost (Gas & Electric)")
+
 
 
 ## Water
