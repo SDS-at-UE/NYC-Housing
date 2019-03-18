@@ -177,3 +177,7 @@ library(ggfittext)
 combined %>% ggplot(aes(x = `Tenure Region`, y = number_rooms)) + geom_bar(stat = "identity", fill = "blue") + 
   theme(axis.text.x = element_text(color = "grey20", size = 15, angle = 90, hjust = .5, vjust = .5, face = "plain"), 
         axis.title.y = element_text(color = "grey20", size = 15))
+
+
+
+NYC %>% select(`Monthly Owner Cost Recode `) %>% View()
