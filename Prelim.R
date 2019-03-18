@@ -168,4 +168,12 @@ NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>%
 
 # Number of Rooms
 NYC %>% group_by(`Tenure 1`, Borough) %>% 
-  summarise(number_rooms = mean(`Number of rooms`), total = n())
+  summarise(number_rooms = mean(`Number of rooms`), total = n()) -> Rooms
+
+library(reshape)
+combined <- unite(Rooms, "Tenure Region", c("Tenure 1", "Borough"))
+
+library(ggfittext)
+combined %>% ggplot(aes(x = `Tenure Region`, y = number_rooms)) + geom_bar(stat = "identity", fill = "blue") + 
+  theme(axis.text.x = element_text(color = "grey20", size = 15, angle = 90, hjust = .5, vjust = .5, face = "plain"), 
+        axis.title.y = element_text(color = "grey20", size = 15))
