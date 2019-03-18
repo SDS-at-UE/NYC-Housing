@@ -9,18 +9,6 @@ for (i in 1:10) {
   dta[[i]] <- read_csv(name, skip = 1)
 }
 
-### full_data <- bind_rows(dta[[1]], 
-#                       dta[[2]],
-#                       dta[[3]],
-#                       dta[[4]],
-#                       dta[[5]],
-#                       dta[[6]],
-#                       dta[[7]],
-#                       dta[[8]],
-#                       dta[[9]],
-#                       dta[[10]]
-#                       )
-
 NYC <- dta[[1]] %>% 
   select(`Borough`, `Electricity paid separately`, `Gas paid separately`,
          `Monthly cost (gas)`, `Combined gas and electric`, 

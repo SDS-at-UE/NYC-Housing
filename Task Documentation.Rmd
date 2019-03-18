@@ -1,0 +1,12 @@
+Mark:  Out of Pocket Rent, Value, Pricing Index
+Andrew: Monthly Contract, Principal Component Analysis, Pricing Index
+Colton: Monthly Owner Cost Recode, Pricing Index
+
+Steps for Wednesday: 
+Looking at columns to see if they are useful, what to use going forward with the pricing index analysis
+
+
+Future steps:  Look at Environmental, External factors 
+Andrew: External structures in the future
+Colton: Internal structures in the future
+Mark: Internal environment
