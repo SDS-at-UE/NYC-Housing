@@ -163,3 +163,9 @@ NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>%
                                                        y = ratio)) + 
   geom_point(aes(color = `First Occupants of Unit`, size = total)) + 
   ggtitle("Toilet Breakdowns")
+
+
+
+# Number of Rooms
+NYC %>% group_by(`Tenure 1`, Borough) %>% 
+  summarise(number_rooms = mean(`Number of rooms`), total = n())
