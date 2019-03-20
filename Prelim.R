@@ -10,8 +10,8 @@ glimpse(NYCHVS_1991_Occupied_File_for_ASA_Challenge)
 NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Reason for Moving`)) + geom_histogram()
 
 
-NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2017 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2017 Occupied File for ASA Challenge.csv", 
+                                                        skip = 1) %>% View()
 
 NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 1, "Bronx", Borough))
 NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
@@ -179,5 +179,37 @@ combined %>% ggplot(aes(x = `Tenure Region`, y = number_rooms)) + geom_bar(stat 
         axis.title.y = element_text(color = "grey20", size = 15))
 
 
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
 
-NYC %>% select(`Monthly Owner Cost Recode `) %>% View()
+NYC <- dta[[1]]
+for (i in 2:3) {
+  dta[[i]] %>% 
+    bind_rows(NYC) -> 
+    NYC
+}
+for (i in 4:9) {
+  dta[[i]] %>% dplyr::select(-`Floor of unit`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
+dta[[10]] %>% 
+  bind_rows(NYC) -> 
+  NYC
+NYC %>% select(`Toilet breakdowns`) %>% summarise(missing = sum(`Toilet breakdowns` == 8), total = n(), pct_missing = missing/total)
+NYC %>% select(`Heating equipment breakdown`) %>% summarise(missing = sum(`Heating equipment breakdown` == 8), total = n(), pct_missing = missing/total)
+names(NYC)
+NYC %>% select(`Out of pocket rent`) %>% summarise(missing = sum(`Out of pocket rent` == 99998), total = n(), pct_mising = missing/total)
+NYC %>% select(`Out of pocket rent`) %>% View()
+NYC %>% select(`Out of pocket rent`, `Year`) %>% group_by(years) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
+NYC %>% dplyr::filter(starts_with("Y"))
+              
+names(dta[[10]]) -> nms
+vars_select(nms, starts_with("Floor"))
+nms <- names(NYC)                                     
+vars_select(nms, starts_with("Y"))
+NYC %>% count(`Year Identifier`)
