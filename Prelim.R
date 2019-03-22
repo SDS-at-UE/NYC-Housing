@@ -205,7 +205,7 @@ NYC %>% select(`Heating equipment breakdown`) %>% summarise(missing = sum(`Heati
 names(NYC)
 NYC %>% select(`Out of pocket rent`) %>% summarise(missing = sum(`Out of pocket rent` == 99998), total = n(), pct_mising = missing/total)
 NYC %>% select(`Out of pocket rent`) %>% View()
-NYC %>% select(`Out of pocket rent`, `Year`) %>% group_by(years) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
+NYC %>% select(`Out of pocket rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
 NYC %>% dplyr::filter(starts_with("Y"))
               
 names(dta[[10]]) -> nms
@@ -213,3 +213,58 @@ vars_select(nms, starts_with("Floor"))
 nms <- names(NYC)                                     
 vars_select(nms, starts_with("Y"))
 NYC %>% count(`Year Identifier`)
+
+
+NYC %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+NYC %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+NYC %>% select(`Out of pocket rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
+NYC %>% select(`Monthly contract rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Monthly contract rent`)))
+NYC %>% select(`Monthly contract rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(`Monthly contract rent` == 99999),
+                                                                                                         total = n(),
+                                                                                             missing_pct = missing/total)
+NYC %>% filter(`Tenure 1` == 1) -> Owned
+NYC %>% filter(`Tenure 1` == 9) -> Rented
+
+
+## Rented
+Rented %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+Rented %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+Rented %>% select(`Monthly contract rent`, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(`Monthly contract rent` == 99999),
+            total = n(),
+            missing_pct = missing/total)
+
+Rented %>% select(`Complete plumbing facilities`, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(is.na(`Complete plumbing facilities`)),
+            total = n(),
+            missing_pct = missing/total)
+
+Rent %>% select(`Complete plumbing facilities`, `Year Identifier`) %>% View()
+## Owned
+Owned %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+Owned %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+Owned %>% select(Value, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(Value == 9999998 | Value == 9999999),
+            total = n(),
+            missing_pct = missing/total)
