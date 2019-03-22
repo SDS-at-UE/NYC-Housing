@@ -11,11 +11,9 @@ for (i in 1:10) {
 
 
 
-NYC <- dta[[1]] %>% 
-  select() 
+NYC <- dta[[1]] 
 for (i in 2:10) {
   dta[[i]] %>% 
-    select() %>%
     bind_rows(NYC) -> 
     NYC
 }
@@ -25,3 +23,17 @@ NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
 NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+newdataooprent <- NYC %>% select(`Out of pocket rent`,`Year Identifier`) %>% 
+  filter(!(`Out of pocket rent` %in% c(99998, 99999)), 
+         `Out of pocket rent` < 6000) %>% 
+  na.exclude()
+
+newdatavalue <- NYC %>% select(Value,`Year Identifier`) %>%
+  filter(!(Value %in% c(9999998, 9999999)), Value < 3990000) %>% na.exclude()
+
+
+
+
+
+                                                       
