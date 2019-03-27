@@ -116,10 +116,14 @@ Rented %>% select(`Condition of building`, `Year Identifier`) %>%
             total = n(),
             missing_pct = missing/total)
 
-Rented %>% select(starts_with("Condition of floors"), `Year Identifier`) %>% 
+# Floor conditions missing at really high rates
+Rented %>% select(`Condition of floors: Sagging or sloping floors`, `Condition of floors: Sagging/sloping floors OR slanted/shifted doorsills/frames`, `Year Identifier`) %>% 
   group_by(`Year Identifier`) %>% 
-  summarise(missing = sum(),
-                          total = n(), misssing_pct = missing/total)
+  summarise(missing = sum(`Condition of floors: Sagging or sloping floors` == 8 | 
+                            `Condition of floors: Sagging or sloping floors` == 9),
+            missing2 = sum(`Condition of floors: Sagging/sloping floors OR slanted/shifted doorsills/frames` == 8 |
+                             `Condition of floors: Sagging/sloping floors OR slanted/shifted doorsills/frames` == 9),
+                          total = n(), misssing_pct = missing/total, missing_pct2 = missing2/total)
 ## Owned #########################################################
 
 # A lot of toilet missing in 2008
