@@ -84,8 +84,9 @@ newdatavalue %>% group_by(`Year Identifier`) %>% count()
 
 
 #### Adding CPI to the data
-CPI <- read.csv("CPI by Year.csv")
-
+cpidata <- read.csv("CPI by Year.csv")
+NYC <- NYC %>% 
+  left_join(cpidata, by = c("Year Identifier" = "Year.Identifier")) %>% View()
 
 
 ### Divide data into own and rent
