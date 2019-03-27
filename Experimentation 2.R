@@ -83,6 +83,11 @@ newdataooprent %>% group_by(`Year Identifier`) %>% count()
 newdatavalue %>% group_by(`Year Identifier`) %>% count()
 
 
+#### Adding CPI to the data
+CPI <- read.csv("CPI by Year.csv")
+
+
+
 ### Divide data into own and rent
 own <- NYC %>% filter(`Tenure 1` == 1)
 own %>% select(waterleakage) %>% filter(waterleakage %in% c(1,2)) %>% count()
