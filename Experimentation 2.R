@@ -83,6 +83,11 @@ newdataooprent %>% group_by(`Year Identifier`) %>% count()
 newdatavalue %>% group_by(`Year Identifier`) %>% count()
 
 
+#### Adding CPI to the data
+CPI <- read.csv("CPI by Year.csv")
+
+
+
 ### Divide data into own and rent
 own <- NYC %>% filter(`Tenure 1` == 1)
 own %>% select(waterleakage) %>% filter(waterleakage %in% c(1,2)) %>% count()
@@ -110,7 +115,11 @@ own$`Borough and Sub-Borough Area` <- as.factor(own$`Borough and Sub-Borough Are
 own$waterleakage <- as.factor(own$waterleakage)
 own$`Heating equipment breakdown` <- as.factor(own$`Heating equipment breakdown`)
 own$`Presence of mice or rats` <- as.factor(own$`Presence of mice or rats`)
+own$`Year Identifier` <- as.factor(own$`Year Identifier`)
 
+
+
+##### RERUN AS PANEL
 mod <- lm(Value ~ `Borough and Sub-Borough Area` + `Number of rooms` + 
      waterleakage + `Heating equipment breakdown` + 
      `Presence of mice or rats`, data = own)
@@ -122,11 +131,16 @@ rent$`Borough and Sub-Borough Area` <- as.factor(rent$`Borough and Sub-Borough A
 rent$waterleakage <- as.factor(rent$waterleakage)
 rent$`Heating equipment breakdown` <- as.factor(rent$`Heating equipment breakdown`)
 rent$`Presence of mice or rats` <- as.factor(rent$`Presence of mice or rats`)
+rent$`Year Identifier` <- as.factor(rent$`Year Identifier`)
 
+
+#### RERUN AS PANEL
 mod2 <- lm(`Monthly contract rent` ~  `Borough and Sub-Borough Area` + 
-             `Number of rooms` + waterleakage + `Heating equipment breakdown` + 
-            `Presence of mice or rats`, data = rent)
+             `Number of rooms` + `Year Identifier` + waterleakage + 
+             `Heating equipment breakdown` + `Presence of mice or rats`, 
+           data = rent)
 summary(mod2)
 
 
-own <- own %>% mutate(problems = case_when())
+own <- own %>% mutate(problems = 0,
+                      problems = ifelse(waterleakage == 1, ))
