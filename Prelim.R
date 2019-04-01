@@ -10,8 +10,15 @@ glimpse(NYCHVS_1991_Occupied_File_for_ASA_Challenge)
 NYCHVS_1991_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Reason for Moving`)) + geom_histogram()
 
 
-NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2017 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("DATA/NYCHVS 2017 Occupied File for ASA Challenge.csv", 
+                                                        skip = 1) %>% View()
+
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 1, "Bronx", Borough))
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
+NYCHVS_2017_Occupied_File_for_ASA_Challenge <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
 
 # People live in one place for a long time
 NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Reason for Moving`)) + geom_histogram()
@@ -41,6 +48,19 @@ Rent <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% filter(`Mortgage Status`
 Rent %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), ratio = heat_break/total) %>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(color = factor(`First Occupants of Unit`)))
 Own %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% summarise(heat_break = sum(`Heating equipment breakdown`== 0), total = n(), ratio = heat_break/total)  %>% ggplot(aes(x = `Condition of building`, y = ratio)) + geom_point(aes(size = factor(`First Occupants of Unit`)))
 
+Rent %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% 
+  summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), 
+            ratio = heat_break/total) %>% ggplot(aes(x = `Condition of building`, 
+                                                     y = ratio)) + 
+  geom_point(aes(color = factor(`First Occupants of Unit`)))
+
+Own %>% group_by(`Condition of building`, `First Occupants of Unit`) %>% 
+  summarise(heat_break = sum(`Heating equipment breakdown`== 0), total = n(), 
+            ratio = heat_break/total)  %>% ggplot(aes(x = `Condition of building`, 
+                                                      y = ratio)) + 
+  geom_point(aes(size = factor(`First Occupants of Unit`)))
+
+
 Rent %>% group_by(`Condition of building`) %>% summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), ratio = toilet_break/total)
 Own %>% group_by(`Condition of building`) %>% summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), ratio = toilet_break/total)
 
@@ -64,27 +84,187 @@ NYCHVS_2017_Occupied_File_for_ASA_Challenge  %>% group_by(Borough) %>% summarise
   ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
 # Staten Island is least populated out of the 5 Boroughs. The Demand in the housing market is therefore less
 # Resulting in lower house costs
-                                             skip = 1)
 
 
-NYCHVS_2017_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2017 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2014_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2014 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2011_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2011 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2008_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2008 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2005_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2005 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_2002_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 2002 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1999_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1999 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1996_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1996 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1993_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1993 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
-NYCHVS_1991_Occupied_File_for_ASA_Challenge <- read_csv("NYCHVS 1991 Occupied File for ASA Challenge.csv", 
-                                                        skip = 1)
 
+# Combining data sets
+
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
+
+NYC <- dta[[1]] %>% select(`Reason for Moving`, `Mortgage Status`, 
+                           `Year Identifier`, `Tenure 1`, 
+                           `Condition of building`, 
+                           `Heating equipment breakdown`, 
+                           `Toilet breakdowns`, `First Occupants of Unit`, 
+                           `Number of rooms`, `Number of bedrooms`, 
+                           `Presence of mice or rats`,
+                           Borough, `Borough and Sub-Borough Area`) 
+for (i in 2:10) {
+  dta[[i]] %>% select(`Reason for Moving`, `Mortgage Status`, 
+                      `Year Identifier`, `Tenure 1`, 
+                      `Condition of building`, 
+                      `Heating equipment breakdown`, 
+                      `Toilet breakdowns`, `First Occupants of Unit`, 
+                      `Number of rooms`, `Number of bedrooms`, 
+                      `Presence of mice or rats`,
+                      Borough, `Borough and Sub-Borough Area`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
+
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 1, "Bronx", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+NYC <- NYC %>% mutate(`First Occupants of Unit` = case_when(`First Occupants of Unit` == 1 ~ "Yes",
+                                                            `First Occupants of Unit` == 2 ~ "No",
+                                                            `First Occupants of Unit` == 3 ~ "Don't Know",
+                                                            `First Occupants of Unit` == 8 ~ "Not Reported"))
+NYC <- NYC %>% mutate(`Tenure 1` = case_when(`Tenure 1` == 1 ~ "Owned",
+                                             `Tenure 1` == 9 ~ "Rented"))
+# Borough Breakdown RENT VS OWN
+NYC %>% group_by(Borough) %>% summarise(total = n(),
+       total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
+       Own = total_own/total, Rent = total_rent/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Own, Rent) %>%
+  ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
+
+
+# Heating Equipment Breakdowns
+NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>% 
+  summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), 
+            ratio = heat_break/total)
+
+
+NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>% 
+  summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), 
+            ratio = heat_break/total) %>% ggplot(aes(x = `Tenure 1`, 
+                                                     y = ratio)) + 
+  geom_point(aes(color = `First Occupants of Unit`, size = total)) + 
+  ggtitle("Heating Equipment Breakdowns")
+
+# Toilet Breakdowns
+NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>% 
+  summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), 
+            ratio = toilet_break/total)
+
+
+NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>% 
+  summarise(toilet_break = sum(`Toilet breakdowns` == 1), total = n(), 
+            ratio = toilet_break/total) %>% ggplot(aes(x = `Tenure 1`, 
+                                                       y = ratio)) + 
+  geom_point(aes(color = `First Occupants of Unit`, size = total)) + 
+  ggtitle("Toilet Breakdowns")
+
+
+
+# Number of Rooms
+NYC %>% group_by(`Tenure 1`, Borough) %>% 
+  summarise(number_rooms = mean(`Number of rooms`), total = n()) -> Rooms
+
+library(reshape)
+combined <- unite(Rooms, "Tenure Region", c("Tenure 1", "Borough"))
+
+library(ggfittext)
+combined %>% ggplot(aes(x = `Tenure Region`, y = number_rooms)) + geom_bar(stat = "identity", fill = "blue") + 
+  theme(axis.text.x = element_text(color = "grey20", size = 15, angle = 90, hjust = .5, vjust = .5, face = "plain"), 
+        axis.title.y = element_text(color = "grey20", size = 15))
+
+
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
+
+NYC <- dta[[1]]
+for (i in 2:3) {
+  dta[[i]] %>% 
+    bind_rows(NYC) -> 
+    NYC
+}
+for (i in 4:9) {
+  dta[[i]] %>% dplyr::select(-`Floor of unit`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
+dta[[10]] %>% 
+  bind_rows(NYC) -> 
+  NYC
+NYC %>% select(`Toilet breakdowns`) %>% summarise(missing = sum(`Toilet breakdowns` == 8), total = n(), pct_missing = missing/total)
+NYC %>% select(`Heating equipment breakdown`) %>% summarise(missing = sum(`Heating equipment breakdown` == 8), total = n(), pct_missing = missing/total)
+names(NYC)
+NYC %>% select(`Out of pocket rent`) %>% summarise(missing = sum(`Out of pocket rent` == 99998), total = n(), pct_mising = missing/total)
+NYC %>% select(`Out of pocket rent`) %>% View()
+NYC %>% select(`Out of pocket rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
+NYC %>% dplyr::filter(starts_with("Y"))
+              
+names(dta[[10]]) -> nms
+vars_select(nms, starts_with("Floor"))
+nms <- names(NYC)                                     
+vars_select(nms, starts_with("Y"))
+NYC %>% count(`Year Identifier`)
+
+
+NYC %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+NYC %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+NYC %>% select(`Out of pocket rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Out of pocket rent`)))
+NYC %>% select(`Monthly contract rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(is.na(`Monthly contract rent`)))
+NYC %>% select(`Monthly contract rent`, `Year Identifier`) %>% group_by(`Year Identifier`) %>% summarise(missing = sum(`Monthly contract rent` == 99999),
+                                                                                                         total = n(),
+                                                                                             missing_pct = missing/total)
+NYC %>% filter(`Tenure 1` == 1) -> Owned
+NYC %>% filter(`Tenure 1` == 9) -> Rented
+
+
+## Rented
+Rented %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+Rented %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+Rented %>% select(`Monthly contract rent`, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(`Monthly contract rent` == 99999),
+            total = n(),
+            missing_pct = missing/total)
+
+Rented %>% select(`Complete plumbing facilities`, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(is.na(`Complete plumbing facilities`)),
+            total = n(),
+            missing_pct = missing/total)
+
+Rent %>% select(`Complete plumbing facilities`, `Year Identifier`) %>% View()
+## Owned
+Owned %>% select(`Toilet breakdowns`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Toilet breakdowns` == 8),
+            total = n(), missing_pct = missing/total)
+
+Owned %>% select(`Heating equipment breakdown`, `Year Identifier`) %>% group_by(`Year Identifier`) %>%
+  summarise(missing = sum(`Heating equipment breakdown` == 8),
+            total = n(), missing_pct = missing/total)
+
+Owned %>% select(Value, `Year Identifier`) %>% 
+  group_by(`Year Identifier`) %>% 
+  summarise(missing = sum(Value == 9999998 | Value == 9999999),
+            total = n(),
+            missing_pct = missing/total)

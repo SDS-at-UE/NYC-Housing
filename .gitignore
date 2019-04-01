@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 .NYC-Housing.Rproj
+
+
+git config --global user.email "mm696@evansville.edu"
+git config --global user.name "Mark Mozina"

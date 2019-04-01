@@ -1,0 +1,52 @@
+---
+title: "Very Brief Introduction to Geospatial Analytics"
+subtitle: "NYC Housing Project"
+date: "March 14th, 2019"
+output: html_notebook
+---
+
+Our brains often organize information based on time and place. But for many data analysis projects, information is still confined to rows and columns. This makes reporting fast and easy &ndash; but not necessarily more insightful. Today, it is possible for analysts to add the context of timing and location to traditional data, creating maps that show changes over time and exactly where those changes are taking place. Maps make it easier for the eye to recognize patterns that were previously buried in spreadsheets, such as distance, proximity, contiguity, and affiliation.
+
+In this tutorial, we take a quick look at a way to incorporate maps into our analysis on *"Housing in New York City"* in R. Data set of statistics and map information of all sub-boroughs in New York City was downloaded from (https://geodacenter.github.io/data-and-lab/nyc/).
+
+## Get Started
+
+Many R packages have been created to help visualizing and analyzing geographic data (i.e., location-based data), two of which `ggmap` and `sf` will be used in this tutorial. So, we can start by installing and loading the packages
+
+```{r,echo=FALSE}
+install.packages(c("ggmap", "sf"))
+```
+
+```{r}
+library(ggmap)
+library(sf)
+```
+
+*Note:* While installing these package is straightforward on Windows-based machines, MacOS- and Linux- based machines require to install several other packages outside of R/RStudio environment. If you are using non-Windows machine and experience issue when installing the packages, I might be able to help.
+
+Fundamentally, geographic data can be classified into two folowing types (also called data models):
+
+- **Vector Data Model** represents the world using points, lines, and polygons. Points are represented by a pair of values: longitute (specifics East-West) and lattitute (specifics North-South). 
+
+- **Raster Data Model** divides the surface into cells of constant size. An example of visualizationg of raster data model is the shooting heat map in basketball analytics. Weather Radar Map is another example.
+
+Looking back to the data set for *New York City Housing*, we recognise the lack of fine-scale location; observations were collected with only sub-borough information available. Hence, the best approach to bring data and statistics to the map is to represent them on top of the base map with polygons used for sub-borough borders.
+
+## How to get the base map
+
+Let's make some maps.  Our first step is to download a basemap using the fantastic ggmap package ([PDF](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/ggmap/ggmapCheatsheet.pdf)).  We'll create a bounding box where NYC lies within and then download the basemap.
+
+```{r}
+nyc_box <- c(left=-74.2589, bottom=40.4774, right=-73.7004, top=40.9176)
+```
+ 
+The most familiar source of basemap is Google Map. However, Google requires user to register and to obtain API key prior to downloading basemap with a small price. Open Street Map, a free, popular, open-source map database also requires users to obtain its API. Relative less quality but user-friendly source is Statenmap, which allow users to download maps according to the given bounding box:
+```{r}
+nyc_map <- get_map(nyc_box, maptype = "roadmap")
+ggmap(nyc_map)
+```
+
+
+
+
+
