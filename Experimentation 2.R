@@ -126,7 +126,6 @@ rent <- rent %>% filter(waterleakage %in% c(0,1),
 
 
 #### Calculate problems index column
-#### Adjust weights???
 own <- own %>% mutate(problems = waterleakage + `Heating equipment breakdown` +
                         `Presence of mice or rats`)
 rent <- rent %>% mutate(problems = waterleakage + `Heating equipment breakdown` +
@@ -139,12 +138,10 @@ own$`Heating equipment breakdown` <- as.factor(own$`Heating equipment breakdown`
 own$`Presence of mice or rats` <- as.factor(own$`Presence of mice or rats`)
 own$year <- own$`Year Identifier`
 
-
-
-##### RERUN AS PANEL
 mod <- lm(Value2017 ~ `Borough and Sub-Borough Area` + `Year Identifier` + 
              `Number of rooms` + `Number of bedrooms` + waterleakage + 
-             `Heating equipment breakdown` + `Presence of mice or rats`, data = own)
+             `Heating equipment breakdown` + `Presence of mice or rats`, 
+          data = own, weights = `Replicate Weight 27 (5 implied decimal places)`)
 summary(mod)
 
 
@@ -156,9 +153,8 @@ rent$`Presence of mice or rats` <- as.factor(rent$`Presence of mice or rats`)
 rent$year <- rent$`Year Identifier`
 
 
-#### RERUN AS PANEL
 mod2 <- lm(`Monthly contract rent` ~  `Borough and Sub-Borough Area` + 
              `Number of rooms` + `Year Identifier` + waterleakage + 
              `Heating equipment breakdown` + `Presence of mice or rats`, 
-           data = rent)
+           data = rent, weights = `Replicate Weight 27 (5 implied decimal places)`)
 summary(mod2)
