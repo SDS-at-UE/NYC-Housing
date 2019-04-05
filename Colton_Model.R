@@ -25,6 +25,18 @@ NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000,
                                             `Water leakage inside apartment`,
                                             `Water leakage inside apartment (house)`))
 
+NYC <- NYC %>% filter(`Toilet breakdowns` %in% c(1,2), 
+                            `Complete plumbing facilities` %in% c(1,2),
+                            `Kitchen facilities functioning` %in% c(1,2),
+                            `Condition of building` %in% c(1,2,3)) 
+
+NYC$`Toilet breakdowns` <- ifelse(NYC$`Toilet breakdowns` == 2, 0, NYC$`Toilet breakdowns`)
+NYC$`Complete plumbing facilities` <- 
+  ifelse(NYC$`Complete plumbing facilities` == 2, 0, NYC$`Complete plumbing facilities`)
+NYC$`Kitchen facilities functioning` <- 
+  ifelse(NYC$`Kitchen facilities functioning` == 2, 0, NYC$`Kitchen facilities functioning`)
+
+
 CPI <- read_csv("CPI by Year.csv")
 NYC %>% left_join(CPI) -> NYC
 NYC$monthly_rent <- NYC$`Monthly contract rent`/NYC$CPI
@@ -32,12 +44,6 @@ NYC$value_own <- NYC$Value/NYC$CPI
 NYC %>% mutate(value_own = Value/CPI)
 NYC %>% filter(`Tenure 1` == 1) -> Owned
 NYC %>% filter(`Tenure 1` == 9) -> Rented
-
-Rented <- Rented %>% filter(`Toilet breakdowns` %in% c(1,2), 
-                      `Complete plumbing facilities` %in% c(1,2),
-                      `Kitchen facilities functioning` %in% c(1,2),
-                      `Condition of building` %in% c(1,2,3)) 
-
 
 
 
@@ -51,16 +57,15 @@ Rented$`Year Identifier` <- as.factor(Rented$`Year Identifier`)
 mod <- lm(monthly_rent ~ `Borough and Sub-Borough Area` + `Number of bedrooms` + 
             `Number of rooms` +
             `Toilet breakdowns` + `Complete plumbing facilities` + 
-            `Kitchen facilities functioning` + `Condition of building` + `Year Identifier`, data = Rented, weights = `Household Sampling Weight (5 implied decimal places)`)
+            `Kitchen facilities functioning` + `Condition of building` + 
+            `Year Identifier`, data = Rented, 
+          weights = `Household Sampling Weight (5 implied decimal places)`)
 summary(mod)
 
-Owned <- Owned %>% filter(`Toilet breakdowns` %in% c(1,2), 
-                            `Complete plumbing facilities` %in% c(1,2),
-                            `Kitchen facilities functioning` %in% c(1,2),
-                            `Condition of building` %in% c(1,2,3)) 
-
-
-
+Owned$`Borough and Sub-Borough Area` <- as.factor(Owned$`Borough and Sub-Borough Area`)
+Owned$waterleakage <- as.factor(Owned$waterleakage)
+Owned$`Heating equipment breakdown` <- as.factor(Owned$`Heating equipment breakdown`)
+Owned$`Presence of mice or rats` <- as.factor(Owned$`Presence of mice or rats`)
 
 Owned$`Borough and Sub-Borough Area` <- as.factor(Owned$`Borough and Sub-Borough Area`)
 Owned$`Toilet breakdowns` <- as.factor(Owned$`Toilet breakdowns`)
@@ -71,5 +76,7 @@ Owned$`Year Identifier` <- as.factor(Owned$`Year Identifier`)
 
 mod_owned <- lm(value_own ~ `Borough and Sub-Borough Area` + `Number of bedrooms` + `Number of rooms`+ 
             `Toilet breakdowns` + `Complete plumbing facilities` + 
-            `Kitchen facilities functioning` + `Condition of building` + `Year Identifier`, data = Owned)
+            `Kitchen facilities functioning` + `Condition of building` + 
+              `Year Identifier` + `Heating equipment breakdown` + waterleakage +
+              `Presence of mice or rats`, data = Owned)
 summary(mod_owned)
