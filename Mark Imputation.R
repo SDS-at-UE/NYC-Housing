@@ -50,7 +50,11 @@ NYC$`Heating equipment breakdown` <-
 
 internal <- NYC %>% select(waterleakage, `Presence of mice or rats`,
                            `Heating equipment breakdown`,
-                           `Number of Cockroaches`, `Functioning Air Conditioning`)
+                           `Number of Cockroaches`, `Functioning Air Conditioning`,
+                           `Year Identifier`)
+
+### Air Conditioning starts in 2014
+### Number of Cockroaches starts in 2008
 
 internal_imputed <- internal
 for (i in c(1:3)) {
@@ -70,30 +74,65 @@ for (i in c(1:3)) {
   internal_imputed[i] <- inn
 }
 
-
+#### Imputation for # of Cockroaches
 int <- subset(internal[[4]],internal[[4]] != 8) %>% factor()
 p1 <- summary(int)[[1]]/length(int)
 p2 <- summary(int)[[2]]/length(int)
 p3 <- summary(int)[[3]]/length(int)
 p4 <- 1-p1-p2-p3
 miss <- which(internal[[4]]==8)
-impute_1 <- c(1:length(miss)) %>% sample(length(miss)*p1)
+impute_1 <- c(1:length(miss)) %>% sample(length(miss)*p1) %>% floor()
 impute_2 <- setdiff(1:length(miss), impute_1)
-impute_25 <- impute_2 %>% sample(length(impute_2)*p2/(p2+p3))
+impute_25 <- impute_2 %>% sample(length(impute_2)*p2/(p2+p3)) %>% floor()
 impute_3 <- setdiff(impute_2, impute_25)
 impute_35 <- impute_3 %>% sample(length(impute_3)*p3/(p3+p4))
 impute_4 <- setdiff(impute_3, impute_35)
   
-inn <- case_when(internal[[i]]== 1 ~ 1,
-                   internal[[i]]== 2 ~ 2,
-                   internal[[i]]== 3 ~ 3,
-                   internal[[i]]== 4 ~ 4,
-                   internal[[i]]== 5 ~ 1,
-                   internal[[i]]== 8 ~ 8) 
+inn <- case_when(internal[[4]]== 1 ~ 1,
+                   internal[[4]]== 2 ~ 2,
+                   internal[[4]]== 3 ~ 3,
+                   internal[[4]]== 4 ~ 4,
+                   internal[[4]]== 5 ~ 1,
+                   internal[[4]]== 8 ~ 8) 
   
-inn[[4]][miss[impute_1]] <- 0
-inn[[4]][miss[impute_25]] <- 1
-inn[[4]][miss[impute_3]] <- 2
-inn[[4]][miss[impute_35]] <- 3
-internal_imputed[i] <- inn
+inn[miss[impute_1]] <- 1
+inn[miss[impute_25]] <- 2
+inn[miss[impute_3]] <- 3
+inn[miss[impute_4]] <- 4
+inn <- inn - 1
+internal_imputed[4] <- inn
+
+#### Imputation for Functioning Air Conditioning
+int <- subset(internal[[5]], internal[[5]] != 8) %>% factor()
+p1 <- summary(int)[[1]]/length(int)
+p2 <- summary(int)[[2]]/length(int)
+p3 <- 1-p1-p2
+miss <- which(internal[[5]] == 8)
+impute_1 <- c(1:length(miss)) %>% sample(length(miss)*p1)
+impute_2 <- setdiff(1:length(miss), impute_1)
+impute_25 <- impute_2 %>% sample(length(impute_2)*p2/(p2+p3))
+impute_3 <- setdiff(impute_2, impute_25)
+
+inn <- case_when(internal[[5]]== 1 ~ 1,
+                 internal[[5]]== 2 ~ 2,
+                 internal[[5]]== 3 ~ 3,
+                 internal[[5]]== 4 ~ 3,
+                 internal[[5]]== 8 ~ 8) 
+
+inn[miss[impute_1]] <- 1
+inn[miss[impute_25]] <- 2
+inn[miss[impute_3]] <- 3
+internal_imputed[5] <- inn
+
+internal_imputed <- internal_imputed %>% 
+  mutate(QIndex = waterleakage + `Presence of mice or rats` +
+                              `Heating equipment breakdown`)
+
+internal_imputed %>% 
+  mutate(QIndeXtra = ifelse(`Year Identifier` >= 2014, 
+                            waterleakage + `Presence of mice or rats` +
+                              `Heating equipment breakdown` + 
+                              .25*`Number of Cockroaches` + 
+                              .25*`Functioning Air Conditioning`,
+                            NA)) %>% View()
 
