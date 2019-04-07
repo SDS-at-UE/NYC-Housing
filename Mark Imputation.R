@@ -124,6 +124,14 @@ inn[miss[impute_25]] <- 2
 inn[miss[impute_3]] <- 3
 internal_imputed[5] <- inn
 
+internal_imputed$`Functioning Air Conditioning` <-
+  ifelse(internal_imputed$`Functioning Air Conditioning` == 1 | 
+           internal_imputed$`Functioning Air Conditioning` == 2, 0, 
+         internal_imputed$`Functioning Air Conditioning`)
+internal_imputed$`Functioning Air Conditioning` <-
+  ifelse(internal_imputed$`Functioning Air Conditioning` == 3, 1, 
+         internal_imputed$`Functioning Air Conditioning`)
+
 internal_imputed <- internal_imputed %>% 
   mutate(QIndex = waterleakage + `Presence of mice or rats` +
                               `Heating equipment breakdown`)
@@ -133,6 +141,18 @@ internal_imputed %>%
                             waterleakage + `Presence of mice or rats` +
                               `Heating equipment breakdown` + 
                               .25*`Number of Cockroaches` + 
-                              .25*`Functioning Air Conditioning`,
-                            NA)) %>% View()
+                              `Functioning Air Conditioning`,
+                            NA))
+
+own <- NYC %>% filter(`Tenure 1` == 1)
+rent <- NYC %>% filter(`Tenure 1` == 9)
+
+own %>% select(`Year Identifier`) %>% table()
+rent %>% select(`Year Identifier`) %>% table()
+
+own %>% select(`Borough and Sub-Borough Area`) %>% table()
+rent %>% select(`Borough and Sub-Borough Area`) %>% table()
+
+own %>% select(`Borough`) %>% table()
+rent %>% select(`Borough`) %>% table()
 
