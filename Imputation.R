@@ -1,3 +1,6 @@
+library(tidyverse)
+library(ggplot2)
+
 # Reading in all data
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
 dta <- list()
@@ -8,9 +11,9 @@ for (i in 1:10) {
 }
 
 # Select external variables
-external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories")) 
-for (i in 2:3) {
-  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories")) %>%
+external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough) 
+for (i in 2:10) {
+  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough) %>%
     bind_rows(external) -> 
     external
 }
@@ -19,11 +22,11 @@ for (i in 2:3) {
 external <- external %>% select(-`Condition of Stairways (Exterior and Interior): No interior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No exterior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No stairways`)
 external$`Number of Units in Building` <- factor(external$`Number of Units in Building`)
 external$`Stories in building` <- factor(external$`Stories in building`)
-external <- data.frame(external)
+external <- external[,-c(7,21,22)]
 
-# Impute columns with 0,8,and 9
+# Impute columns with 1,8,and 9
 external_imputed <- external
-for (i in c(1:16)) {
+for (i in c(1:14)) {
   ex <- subset(external[[i]],external[[i]] != 8)
   ex <- ifelse(ex == 1, 1, 0)
   p <- mean(ex)
@@ -35,24 +38,57 @@ for (i in c(1:16)) {
   exx <- case_when(external[[i]]== 1 ~ 1,
                    external[[i]]== 9 ~ 0,
                    external[[i]]== 8 ~ 8,
-                   external[[i]]== 2 ~ 0) 
+                   external[[i]]== 2 ~ 0)
   exx[miss[impute_1]] <- 1 
   exx[miss[impute_2]] <- 0
   external_imputed[i] <- exx
 }
 
-# Impute column with 1, 2, 3, and 8
-ex <- subset(external[[17]], external[[17]] != 8) %>% factor()
+# Impute column with 1, 2, 3, and 8 (condition of building)
+ex <- subset(external[[15]], external[[15]] != 8) %>% factor()
 p1 <- summary(ex)[[1]]/length(ex)
 p2 <- summary(ex)[[2]]/length(ex)
 p3 <- 1-p1-p2
-miss <- which(external[[17]] == 8)
+miss <- which(external[[15]] == 8)
 impute_1 <- c(1:length(miss)) %>% sample(length(miss)*p1)
 impute_2 <- setdiff(1:length(miss), impute_1)
 impute_25 <- impute_2 %>% sample(length(impute_2)*p2/(p2+p3))
 impute_3 <- setdiff(impute_2, impute_25)
 
-external_imputed[[17]][miss[impute_1]] <- 1
-external_imputed[[17]][miss[impute_25]] <- 2
-external_imputed[[17]][miss[impute_3]] <- 3
-summary(external_imputed)
+external_imputed[[15]][miss[impute_1]] <- 1
+external_imputed[[15]][miss[impute_25]] <- 2
+external_imputed[[15]][miss[impute_3]] <- 3
+external_imputed[[15]] <- case_when(external_imputed[[15]] == 1 ~ 3,
+                                    external_imputed[[15]] == 2 ~ 1,
+                                    external_imputed[[15]] == 3 ~ 2)
+# check NA's
+external_imputed %>% mutate_all(., funs(factor(.))) %>% summary()
+
+# Comouting score
+external_imputed <- external_imputed %>% mutate(score = external_imputed[[1]] + external_imputed[[2]]  
+                                                  +external_imputed[[3]] + external_imputed[[7]] 
+                                                  +external_imputed[[8]] + external_imputed[[11]] 
+                                                  +external_imputed[[12]] + external_imputed[[15]])   
+# Formating year
+external_imputed[[18]] <- case_when(external_imputed[[18]] == 91 ~ 1991,
+                                    external_imputed[[18]] == 93 ~ 1993,
+                                    external_imputed[[18]] == 96 ~ 1996,
+                                    external_imputed[[18]] == 99 ~ 1999,
+                                    TRUE ~ as.double(external_imputed[[18]]))
+external_imputed[[18]] <- factor(external_imputed[[18]])
+
+# Renaming borough
+external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
+                                    external_imputed[[19]] == 2 ~ "Brooklyn",
+                                    external_imputed[[19]] == 3 ~ "Manhattan",
+                                    external_imputed[[19]] == 4 ~ "Queens",
+                                    external_imputed[[19]] == 5 ~ "Staten Island")
+# By year
+by_year <- external_imputed %>% group_by(`Year Identifier`) %>% summarise(Score = mean(score))
+ggplot(by_year,aes(x = `Year Identifier`, y = Score, group = 0)) + geom_point() + geom_line()
+
+# By borough
+by_borough <- external_imputed %>% group_by(Borough) %>% summarise(Score = mean(score))
+ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point() + geom_line()
+
+# 
