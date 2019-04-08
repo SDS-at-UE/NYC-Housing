@@ -183,7 +183,13 @@ NYC %>% group_by(Borough) %>% summarise(total = n(),
        Own = total_own/total, Rent = total_rent/total) %>% 
   select(-starts_with("total")) %>%
   gather(key = "type", value = "percent", Own, Rent) %>%
-  ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
+  ggplot(aes(x = Borough, y = percent)) + 
+  geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
+  geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
+  labs(title = "Own VS. Rent", x = "Years", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
 
 NYC  %>% group_by(`Year Identifier`) %>% summarise(total = n(),
       total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
@@ -198,9 +204,32 @@ NYC  %>% group_by(`Year Identifier`) %>% summarise(total = n(),
         title = element_text(size = 20))
 
 
+NYC %>% summarise(total = n(),
+                  total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
+                  Own = total_own/total, Rent = total_rent/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Own, Rent) %>%
+  ggplot(aes(x = type, y = percent)) + geom_bar(fill = "indianred", stat = "identity") +
+  geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
+  labs(title = "Own VS. Rent", x = "Years", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
 
 
-
+NYC$`Borough and Sub-Borough Area` <- as.factor(NYC$`Borough and Sub-Borough Area`)
+NYC  %>% group_by(`Borough and Sub-Borough Area`, Borough) %>% summarise(total = n(),
+                                                   total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
+                                                   Own = total_own/total, Rent = total_rent/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Own, Rent) %>%
+  ggplot(aes(x = `Borough and Sub-Borough Area` , y = percent)) + geom_bar(aes(colour = type, fill = Borough), size = 1.1,
+         stat = "identity", position = position_dodge(width = 1)) + 
+  geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
+  labs(title = "Own VS. Rent", x = "Sub-Borough Areas", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20),panel.background = element_rect(fill = "grey55")) + scale_color_manual(values = c("black", "yellow"))
 # Heating Equipment Breakdowns
 NYC %>% group_by(`Tenure 1`, `First Occupants of Unit`) %>% 
   summarise(heat_break = sum(`Heating equipment breakdown` == 0), total = n(), 
