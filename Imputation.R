@@ -98,6 +98,7 @@ ggplot(by_year) +
   
 
 # By borough
+<<<<<<< HEAD
 by_borough <- external_imputed %>% group_by(Borough,`Tenure 1`) %>% summarise(Score = mean(score))
 by_borough <- by_borough %>% mutate(Score1 = format(Score, digits = 3))
 ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) + 
@@ -108,3 +109,7 @@ ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) +
 
 
 
+=======
+by_borough <- external_imputed %>% group_by(Borough) %>% summarise(Score = mean(score))
+ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point() + geom_line()
+>>>>>>> 7c99bd92ba90904d4873ee3e05f5cdc398a10486
