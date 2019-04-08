@@ -92,9 +92,9 @@ internal_imputed[[8]] <- case_when(internal_imputed[[8]] == 1 ~ "Bronx",
 
 
 # Select external variables
-external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough) 
+external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) 
 for (i in 2:10) {
-  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough) %>%
+  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) %>%
     bind_rows(external) -> 
     external
 }
@@ -103,7 +103,7 @@ for (i in 2:10) {
 external <- external %>% select(-`Condition of Stairways (Exterior and Interior): No interior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No exterior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No stairways`)
 external$`Number of Units in Building` <- factor(external$`Number of Units in Building`)
 external$`Stories in building` <- factor(external$`Stories in building`)
-external <- external[,-c(7,21,22)]
+external <- external[,-c(7,22,23)]
 
 # Impute columns with 1,8,and 9
 external_imputed <- external
@@ -165,6 +165,8 @@ external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
                                     external_imputed[[19]] == 4 ~ "Queens",
                                     external_imputed[[19]] == 5 ~ "Staten Island")
 
+# Renaming status
+external_imputed[[20]] <- ifelse(external_imputed[[20]]==1,"Own","Rent")
 
 ### Select internal structural variables
 internal2 <- dta[[1]] %>% select(contains("bedrooms"), 
@@ -269,11 +271,14 @@ ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point(size=5)
 
 ## Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
-imputed <- imputed[,-c(26,28,33,34)]
+imputed <- imputed %>% select(Borough, `Year Identifier`, `Tenure 1`, 
+                              score, QIndex, Index)
 
 ## Compute the combined quality index
 imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
+
+##### Combined graphs of all 3
 ## Graph by year
 by_year <- imputed %>% group_by(`Year Identifier`) %>% 
   summarise(Score = mean(QualityIndex))
@@ -284,3 +289,26 @@ ggplot(by_year,aes(x = `Year Identifier`, y = Score, group = 0)) +
 by_borough <- imputed %>% 
   group_by(Borough) %>% summarise(Score = mean(QualityIndex))
 ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point(size=5)
+
+
+# By Year
+by_year <- imputed %>% group_by(`Year Identifier`, `Tenure 1`) %>% 
+  summarise(Score = mean(QualityIndex))
+by_year <- by_year %>% mutate(Score1 = format(Score, digits = 3))
+ggplot(by_year) + 
+  geom_bar(aes(x = `Year Identifier`, y = Score, fill = `Tenure 1`),stat="identity",position="dodge") + 
+  geom_point(aes(x = `Year Identifier`, y = Score,shape=`Tenure 1`), position = position_dodge(width = 0.9)) + 
+  geom_line(aes(x = `Year Identifier`, y = Score,group = `Tenure 1`), position = position_dodge(width = 0.9)) + 
+  geom_text(aes(label=Score1, x = `Year Identifier`, y = Score, vjust=-1.5))
+
+# By Borough
+by_borough <- imputed %>% group_by(Borough,`Tenure 1`) %>% 
+  summarise(Score = mean(QualityIndex))
+by_borough <- by_borough %>% mutate(Score1 = format(Score, digits = 3))
+ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) + 
+  geom_bar(stat="identity",position="dodge") + 
+  geom_text(aes(label=Score1, x = Borough, y = Score, vjust=-1.5), position = position_dodge(width = 0.9)) + 
+  ylim(0,2.75)
+
+
+
