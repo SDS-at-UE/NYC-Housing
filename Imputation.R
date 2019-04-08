@@ -90,5 +90,3 @@ ggplot(by_year,aes(x = `Year Identifier`, y = Score, group = 0)) + geom_point() 
 # By borough
 by_borough <- external_imputed %>% group_by(Borough) %>% summarise(Score = mean(score))
 ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point() + geom_line()
-
-# 
