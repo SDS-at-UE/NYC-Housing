@@ -33,12 +33,41 @@ NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Mortgage Status`
 # Owners less likely to live in the apartment building
 NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% ggplot(aes(x = `Owner in building`)) + geom_histogram()
 
+library(tidyverse)
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+dta <- list()
+for (i in 1:10) {
+  name <- str_c("DATA/NYCHVS ", years[i]," Occupied File for ASA Challenge.csv")
+  dta[[i]] <- read_csv(name, skip = 1)
+}
+
+NYC <- dta[[1]]
+for (i in 2:3) {
+  dta[[i]] %>% 
+    bind_rows(NYC) -> 
+    NYC
+}
+for (i in 4:9) {
+  dta[[i]] %>% dplyr::select(-`Floor of unit`) %>%
+    bind_rows(NYC) -> 
+    NYC
+}
+dta[[10]] %>% 
+  bind_rows(NYC) -> 
+  NYC
+
+NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000, 
+                                            `Water leakage inside apartment`,
+                                            `Water leakage inside apartment (house)`))
+
+
+
 # Quality of housing for people who rent vs. own
 
-Own <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% filter(`Mortgage Status` == 1 | `Mortgage Status` == 2)
+Own <- NYC %>% filter(`Tenure 1` == 1)
 #Own %>% select(`Mortgage Status`) %>% View()
 
-Rent <- NYCHVS_2017_Occupied_File_for_ASA_Challenge %>% filter(`Mortgage Status` == 9)
+Rent <- NYC %>% filter(`Tenure 1` == 9)
  # More people rent vs own
 
 # Surprising: Owner's have more breakdowns of heating equipment than renters do
@@ -129,6 +158,25 @@ NYC <- NYC %>% mutate(`First Occupants of Unit` = case_when(`First Occupants of 
                                                             `First Occupants of Unit` == 8 ~ "Not Reported"))
 NYC <- NYC %>% mutate(`Tenure 1` = case_when(`Tenure 1` == 1 ~ "Owned",
                                              `Tenure 1` == 9 ~ "Rented"))
+
+
+
+NYC[[3]] <- case_when(NYC[[3]] == 91 ~ 1991,
+                       NYC[[3]] == 93 ~ 1993,
+                       NYC[[3]] == 96 ~ 1996,
+                       NYC[[3]] == 99 ~ 1999,
+                                    TRUE ~ as.double(NYC[[3]]))
+NYC[[3]] <- factor(NYC[[3]])
+
+# Renaming borough
+NYC[[12]] <- case_when(NYC[[12]] == 1 ~ "Bronx",
+                       NYC[[12]] == 2 ~ "Brooklyn",
+                       NYC[[12]] == 3 ~ "Manhattan",
+                       NYC[[12]] == 4 ~ "Queens",
+                       NYC[[12]] == 5 ~ "Staten Island")
+
+
+
 # Borough Breakdown RENT VS OWN
 NYC %>% group_by(Borough) %>% summarise(total = n(),
        total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
@@ -136,6 +184,21 @@ NYC %>% group_by(Borough) %>% summarise(total = n(),
   select(-starts_with("total")) %>%
   gather(key = "type", value = "percent", Own, Rent) %>%
   ggplot(aes(x = Borough, y = percent)) + geom_bar(aes(fill = type), stat = "identity") + geom_hline(yintercept = 2/3, linetype = 2, size = 2)
+
+NYC  %>% group_by(`Year Identifier`) %>% summarise(total = n(),
+      total_own = sum(`Tenure 1` == "Owned"), total_rent = sum(`Tenure 1` == "Rented"),
+      Own = total_own/total, Rent = total_rent/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Own, Rent) %>%
+  ggplot(aes(x = `Year Identifier`, y = percent)) + geom_bar(aes(fill = type),
+         stat = "identity", position = position_dodge(width = 1)) + geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
+  labs(title = "Own VS. Rent", x = "Years", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
+
+
+
 
 
 # Heating Equipment Breakdowns
