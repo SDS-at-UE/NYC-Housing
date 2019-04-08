@@ -144,15 +144,17 @@ internal_imputed %>%
                               `Functioning Air Conditioning`,
                             NA))
 
-own <- NYC %>% filter(`Tenure 1` == 1)
-rent <- NYC %>% filter(`Tenure 1` == 9)
 
-own %>% select(`Year Identifier`) %>% table()
-rent %>% select(`Year Identifier`) %>% table()
+# Formating year
+internal_imputed[[6]] <- case_when(internal_imputed[[6]] == 91 ~ 1991,
+                                    internal_imputed[[6]] == 93 ~ 1993,
+                                    internal_imputed[[6]] == 96 ~ 1996,
+                                    internal_imputed[[6]] == 99 ~ 1999,
+                                    TRUE ~ as.double(internal_imputed[[6]]))
+internal_imputed[[6]] <- factor(internal_imputed[[6]])
 
-own %>% select(`Borough and Sub-Borough Area`) %>% table()
-rent %>% select(`Borough and Sub-Borough Area`) %>% table()
-
-own %>% select(`Borough`) %>% table()
-rent %>% select(`Borough`) %>% table()
+by_year <- internal_imputed %>% 
+  group_by(`Year Identifier`) %>% summarise(Score = mean(QIndex))
+ggplot(by_year,aes(x = `Year Identifier`, y = Score, group = 0)) + 
+  geom_point() + geom_line()
 
