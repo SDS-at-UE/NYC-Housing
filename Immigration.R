@@ -32,15 +32,31 @@ dta[[10]] %>%
   bind_rows(NYC) -> 
   NYC
 
+### Add graphs about percentage of immigrants year over year, borough to borough
 
+### Puerto Ricans added to data set?
+### Percentage of 1st and 2nd generation immigrants, compare and contrast
+### Make data set, add flags for 1st and 2nd generations
 NYC %>% filter(`Moved to the U.S. as immigrant` == 1) %>% 
   select(`Moved to the U.S. as immigrant`) %>% table()
 
-NYC %>% filter(!(`Place of Householder's Father's Birth` == c(7,9,10,98))) %>% 
-  select(`Place of Householder's Father's Birth`) %>% table()
+NYC %>% filter(!(`Place of Householder's Father's Birth` %in% c(7,9,10,98))) %>% 
+  select(`Place of Householder's Father's Birth`) %>% count()
 
-NYC %>% filter(!(`Place of Householder's Mother's Birth` == c(7,9,10,98))) %>% 
-  select(`Place of Householder's Mother's Birth`) %>% table()
+NYC %>% filter(!(`Place of Householder's Mother's Birth` %in% c(7,9,10,98))) %>% 
+  select(`Place of Householder's Mother's Birth`) %>% count()
+
+## Split into rent versus own
+own <- NYC %>% filter(`Tenure 1` == 1)
+rent <- NYC %>% filter(`Tenure 1` == 9)
+
+## Bar charts of rent vs own
+
+
+
+## Age, income, how long you've stayed in the same unit, how long been in NYC
+
+
 
 #impute housing quality index for immigrants
 NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000, 
@@ -261,7 +277,3 @@ immigrant <- immigrant %>% select(Borough, `Year Identifier`, `Tenure 1`,
 
 ## Compute the combined quality index
 immigrant <- immigrant %>% mutate(QualityIndex = score + QIndex + Index)
-
-## Split into rent versus own
-own <- NYC %>% filter(`Tenure 1` == 1)
-rent <- NYC %>% filter(`Tenure 1` == 9)
