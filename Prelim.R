@@ -186,7 +186,7 @@ NYC %>% group_by(Borough) %>% summarise(total = n(),
   ggplot(aes(x = Borough, y = percent)) + 
   geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
   geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
-  labs(title = "Own VS. Rent", x = "Years", y = "Percent", legend = "Type") +
+  labs(title = "Own VS. Rent", x = "Boroughs", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20))
@@ -211,7 +211,7 @@ NYC %>% summarise(total = n(),
   gather(key = "type", value = "percent", Own, Rent) %>%
   ggplot(aes(x = type, y = percent)) + geom_bar(fill = "indianred", stat = "identity") +
   geom_hline(yintercept = 2/3, linetype = 2, size = 2) +
-  labs(title = "Own VS. Rent", x = "Years", y = "Percent", legend = "Type") +
+  labs(title = "Own VS. Rent", x = "Tenure Status", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20))
