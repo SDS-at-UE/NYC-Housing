@@ -32,19 +32,70 @@ dta[[10]] %>%
   bind_rows(NYC) -> 
   NYC
 
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 1, "Bronx", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 2, "Brooklyn", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 3, "Manhattan", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 4, "Queens", Borough))
+NYC <- NYC %>% mutate(Borough = ifelse(Borough == 5, "Staten Island", Borough))
+
+NYC[[220]] <- case_when(NYC[[220]] == 91 ~ 1991,
+                                   NYC[[220]] == 93 ~ 1993,
+                                   NYC[[220]] == 96 ~ 1996,
+                                   NYC[[220]] == 99 ~ 1999,
+                                   TRUE ~ as.double(NYC[[220]]))
+NYC[[220]] <- factor(NYC[[220]])
+
 ### Add graphs about percentage of immigrants year over year, borough to borough
 
-### Puerto Ricans added to data set?
+### Immigrants by borough
+selfid <- NYC %>% filter(`Year Identifier` %in% c(1999,2002,2005,2008,2011,2014,2017))
+selfid %>% group_by(Borough) %>% summarise(total = n(),
+                                        total_immigrant = sum(`Moved to the U.S. as immigrant` == 1), 
+                                        total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9)),
+                                        total_na = sum(`Moved to the U.S. as immigrant` == 8),
+                                        Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                        Unidentified = total_na/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  ggplot(aes(x = Borough, y = percent)) + 
+  geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "Borough", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
+
+### Immigrants by year
+selfid %>% group_by(`Year Identifier`) %>% summarise(total = n(),
+                                           total_immigrant = sum(`Moved to the U.S. as immigrant` == 1), 
+                                           total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9)),
+                                           total_na = sum(`Moved to the U.S. as immigrant` == 8),
+                                           Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                           Unidentified = total_na/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  ggplot(aes(x = `Year Identifier`, y = percent)) + 
+  geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "Years", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
+
 ### Percentage of 1st and 2nd generation immigrants, compare and contrast
 ### Make data set, add flags for 1st and 2nd generations
-NYC %>% filter(`Moved to the U.S. as immigrant` == 1) %>% 
-  select(`Moved to the U.S. as immigrant`) %>% table()
+immigrant <- NYC %>% filter(`Moved to the U.S. as immigrant` == 1 | 
+               !(`Place of Householder's Father's Birth` %in% c(7,9,10,98)) |
+               !(`Place of Householder's Mother's Birth` %in% c(7,9,10,98)))
 
-NYC %>% filter(!(`Place of Householder's Father's Birth` %in% c(7,9,10,98))) %>% 
-  select(`Place of Householder's Father's Birth`) %>% count()
+immigrant <- immigrant %>% mutate(selfidflag = ifelse(`Moved to the U.S. as immigrant` == 1, 1, 0))
+immigrant <- immigrant %>% 
+  mutate(fatherflag = ifelse(!(`Place of Householder's Father's Birth`) %in% c(7,9,10,98) , 1, 0))
+immigrant <- immigrant %>% 
+  mutate(motherflag = ifelse(!(`Place of Householder's Mother's Birth`) %in% c(7,9,10,98) , 1, 0))
+immigrant <- immigrant %>% mutate(parentsflag = ifelse(fatherflag == 1 & motherflag == 1, 1, 0))
 
-NYC %>% filter(!(`Place of Householder's Mother's Birth` %in% c(7,9,10,98))) %>% 
-  select(`Place of Householder's Mother's Birth`) %>% count()
+### Calculate percents of self-id'd 1st gen immigrants and second generation immigrants
+immigrant %>% select(selfidflag) %>% summarise(total = sum(selfidflag))
+
 
 ## Split into rent versus own
 own <- NYC %>% filter(`Tenure 1` == 1)
