@@ -252,10 +252,12 @@ imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 library(ltm)
 NYC <- read_csv("imputed_NYC.csv")
 
-NYC <- NYC %>% filter(`Year Identifier2` == 2017) 
-NYC <- NYC[,-c(15:21, 25:31, 34:36)]
+NYC <- NYC %>% filter(`Year Identifier2` == 2017)
+NYC <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
+NYC <- NYC[,-c(4:6, 9:10, 13:21, 25:31, 34:37)]
+NYC_int <- NYC[,c(32:33)]
 
-mod <- rasch(NYC)
+mod <- rasch(NYC_int)
 
 plot(mod, type = "IIC")
 plot(mod, type = "ICC")
@@ -269,4 +271,12 @@ plot(mod_2pl, type = "ICC")
 
 
 theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch %>% 
+
+theta.rasch$score.dat %>% View()
+  
+theta.rasch$score.dat %>%
+  mutate(Total = rowSums(theta.rasch$score.dat[,c(1:13)])) %>%
+  ggplot(aes(x = z1 , y = Total)) + geom_point()
+
+theta.rasch$score.dat %>% select(-c(13:14,16)) %>% right_join(NYC) -> NYCZ
+NYCZ %>% View()
