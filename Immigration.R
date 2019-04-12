@@ -65,16 +65,16 @@ selfid %>% group_by(Borough) %>% summarise(total = n(),
         title = element_text(size = 20))
 
 ### Immigrants by year
-selfid %>% group_by(`Year Identifier`) %>% summarise(total = n(),
-                                           total_immigrant = sum(`Moved to the U.S. as immigrant` == 1), 
-                                           total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9)),
-                                           total_na = sum(`Moved to the U.S. as immigrant` == 8),
+selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(WEIGHT COLUMN HERE),
+                                           total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * WEIGHT HERE), 
+                                           total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * WEIGHT HERE),
+                                           total_na = sum(`Moved to the U.S. as immigrant` == 8 * WEIGHT HERE),
                                            Immigrant = total_immigrant/total, Citizen = total_citizen/total,
                                            Unidentified = total_na/total) %>% 
   select(-starts_with("total")) %>%
   gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
   ggplot(aes(x = `Year Identifier`, y = percent)) + 
-  geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
+  geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "Years", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
@@ -93,7 +93,7 @@ immigrant <- immigrant %>%
   mutate(motherflag = ifelse(!(`Place of Householder's Mother's Birth`) %in% c(7,9,10,98) , 1, 0))
 immigrant <- immigrant %>% mutate(parentsflag = ifelse(fatherflag == 1 & motherflag == 1, 1, 0))
 
-### Calculate percents of self-id'd 1st gen immigrants and second generation immigrants
+### Calculate percents of self-id'd 1st gen immigrants and second generation immigrants DO LATER
 immigrant %>% select(selfidflag) %>% summarise(total = sum(selfidflag))
 
 
@@ -102,8 +102,20 @@ own <- NYC %>% filter(`Tenure 1` == 1)
 rent <- NYC %>% filter(`Tenure 1` == 9)
 
 ## Bar charts of rent vs own
-
-
+selfid %>% group_by(Borough) %>% summarise(total = n(),
+                                           total_immigrant = sum(`Moved to the U.S. as immigrant` == 1), 
+                                           total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9)),
+                                           total_na = sum(`Moved to the U.S. as immigrant` == 8),
+                                           Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                           Unidentified = total_na/total) %>% 
+  select(-starts_with("total")) %>%
+  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  ggplot(aes(x = Borough, y = percent)) + 
+  geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "Borough", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20))
 
 ## Age, income, how long you've stayed in the same unit, how long been in NYC
 

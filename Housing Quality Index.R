@@ -1,6 +1,7 @@
 library(readr)
 library(tidyverse)
 library(plm)
+library(ltm)
 set.seed(6969)
 
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
@@ -41,7 +42,7 @@ NYC$`Heating equipment breakdown` <-
 NYC$`Heating equipment breakdown` <-
   ifelse(NYC$`Heating equipment breakdown` == 2, 0, NYC$`Heating equipment breakdown`)
 
-internal <- NYC %>% select(waterleakage, `Presence of mice or rats`,
+internal <- NYC %>% dplyr::select(waterleakage, `Presence of mice or rats`,
                            `Heating equipment breakdown`,
                            `Number of Cockroaches`, `Functioning Air Conditioning`,
                            `Year Identifier`)
@@ -92,15 +93,15 @@ internal_imputed[[8]] <- case_when(internal_imputed[[8]] == 1 ~ "Bronx",
 
 
 # Select external variables
-external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) 
+external <- dta[[1]] %>% dplyr::select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) 
 for (i in 2:10) {
-  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) %>%
+  dta[[i]] %>% dplyr::select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) %>%
     bind_rows(external) -> 
     external
 }
 
 # Clean & formating
-external <- external %>% select(-`Condition of Stairways (Exterior and Interior): No interior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No exterior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No stairways`)
+external <- external %>% dplyr::select(-`Condition of Stairways (Exterior and Interior): No interior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No exterior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No stairways`)
 external$`Number of Units in Building` <- factor(external$`Number of Units in Building`)
 external$`Stories in building` <- factor(external$`Stories in building`)
 external <- external[,-c(7,22,23)]
@@ -145,6 +146,10 @@ external_imputed[[15]] <- case_when(external_imputed[[15]] == 1 ~ 3,
 # check NA's
 external_imputed %>% mutate_all(., funs(factor(.))) %>% summary()
 
+# Standardize Condition of building
+external_imputed$`Condition of building` <- 
+  external_imputed$`Condition of building` - 1
+
 # Computing score
 external_imputed <- external_imputed %>% mutate(score = external_imputed[[1]] + external_imputed[[2]]  
                                                 +external_imputed[[3]] + external_imputed[[7]] 
@@ -169,13 +174,13 @@ external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
 external_imputed[[20]] <- ifelse(external_imputed[[20]]==1,"Own","Rent")
 
 ### Select internal structural variables
-internal2 <- dta[[1]] %>% select(contains("bedrooms"), 
+internal2 <- dta[[1]] %>% dplyr::select(contains("bedrooms"), 
                                  contains("rooms"),contains("Interior"),
                                  contains("Condition of building"),
                                  contains("Kitchen"),contains("Plumbing"), 
                                  contains("Toilet"), contains("holes")) 
 for (i in 2:10) {
-  dta[[i]] %>% select(contains("bedrooms"), contains("rooms"),contains("Interior"),
+  dta[[i]] %>% dplyr::select(contains("bedrooms"), contains("rooms"),contains("Interior"),
                       contains("Condition of building"),contains("Kitchen"),
                       contains("Plumbing"), contains("Toilet"), 
                       contains("holes")) %>%
@@ -205,7 +210,7 @@ for (i in c(9, 16)) {
 
 # We can use cracks of holes in interior walls,
 # number of bedrooms, and number of rooms
-internal2_imputed %>% select(`Number of bedrooms`, `Number of rooms`,
+internal2_imputed %>% dplyr::select(`Number of bedrooms`, `Number of rooms`,
                             `Cracks of holes in interior walls`, 
                             `Holes in floors`) -> 
   internal2_imputed
@@ -271,8 +276,6 @@ ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point(size=5)
 
 ## Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
-imputed <- imputed %>% select(Borough, `Year Identifier`, `Tenure 1`, 
-                              score, QIndex, Index)
 
 ## Compute the combined quality index
 imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
@@ -311,4 +314,72 @@ ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) +
   ylim(0,2.75)
 
 
+#### Run IRT 
+##### Run everything together
+imputed_irt <- imputed %>% filter(`Year Identifier` == 2017)
+imputed_irt <- imputed_irt[,-c(15:21,25:31,34:37)]
+mod_rasch <- rasch(imputed_irt, start.val = "random")
+summary(mod_rasch)
+plot(mod_rasch, type = "IIC")
 
+mod_2pl <- ltm(imputed_irt ~ z1)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch
+
+##### Run external structure together
+external_imputed_irt <- external_imputed[,c(1:3,7,8,11,12,15)]
+mod_2pl <- grm(external_imputed_irt)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+
+##### Run internal structure together
+internal2_imputed_irt <- internal2_imputed[,c(3,4)]
+mod_2pl <- ltm(internal2_imputed_irt ~ z1)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+
+##### Run internval environment together
+internal_imputed_irt <- internal_imputed[,c(1:3)]
+mod_2pl <- ltm(internal_imputed_irt ~ z1)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch
+
+###### Run all internal variables together
+internal_irt <- bind_cols(internal_imputed_irt, internal2_imputed_irt)
+mod_2pl <- ltm(internal_irt ~ z1)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
+                                   `Heating equipment breakdown` + 
+                                   `Cracks of holes in interior walls` +
+                                   `Holes in floors`) %>% 
+  ggplot(aes(x = z1, y = Total)) + geom_point()
+
+
+##### Run internal and external variables together
+total_irt <- bind_cols(internal_irt, external_imputed_irt)
+mod_2pl <- grm(total_irt)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
+                                   `Heating equipment breakdown` + 
+                                   `Cracks of holes in interior walls` +
+                                   `Holes in floors`) %>% 
+  ggplot(aes(x = z1, y = Total)) + geom_point()
+
+imputed <- left_join(imputed,theta.rasch$score.dat)
+imputed <- imputed[,-c(38,39,41)]
+
+imputed %>% ggplot(aes(x=z1, y = QualityIndex)) + geom_point()
