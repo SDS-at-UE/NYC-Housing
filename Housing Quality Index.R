@@ -329,14 +329,12 @@ theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch
 
 ##### Run external structure together
-### Filter variables better (no none, any, or unable to observe)
-external_imputed_irt <- external_imputed %>% filter(`Year Identifier` == 2017)
-external_imputed_irt <- external_imputed_irt[,c(1:14)]
-mod_2pl <- ltm(external_imputed_irt ~ z1)
+external_imputed_irt <- external_imputed[,c(1:3,7,8,11,12,15)]
+mod_2pl <- grm(external_imputed_irt)
 summary(mod_2pl)
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch
+theta.rasch$score.dat %>% View()
 
 ##### Run internal structure together
 internal2_imputed_irt <- internal2_imputed[,c(3,4)]
@@ -344,7 +342,7 @@ mod_2pl <- ltm(internal2_imputed_irt ~ z1)
 summary(mod_2pl)
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch
+theta.rasch$score.dat %>% View()
 
 ##### Run internval environment together
 internal_imputed_irt <- internal_imputed[,c(1:3)]
@@ -354,3 +352,34 @@ plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch
 
+###### Run all internal variables together
+internal_irt <- bind_cols(internal_imputed_irt, internal2_imputed_irt)
+mod_2pl <- ltm(internal_irt ~ z1)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
+                                   `Heating equipment breakdown` + 
+                                   `Cracks of holes in interior walls` +
+                                   `Holes in floors`) %>% 
+  ggplot(aes(x = z1, y = Total)) + geom_point()
+
+
+##### Run internal and external variables together
+total_irt <- bind_cols(internal_irt, external_imputed_irt)
+mod_2pl <- grm(total_irt)
+summary(mod_2pl)
+plot(mod_2pl)
+theta.rasch <- ltm::factor.scores(mod_2pl)
+theta.rasch$score.dat %>% View()
+theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
+                                   `Heating equipment breakdown` + 
+                                   `Cracks of holes in interior walls` +
+                                   `Holes in floors`) %>% 
+  ggplot(aes(x = z1, y = Total)) + geom_point()
+
+imputed <- left_join(imputed,theta.rasch$score.dat)
+imputed <- imputed[,-c(38,39,41)]
+
+imputed %>% ggplot(aes(x=z1, y = QualityIndex)) + geom_point()
