@@ -22,7 +22,7 @@ for (i in 4:9) {
     bind_rows(NYC) -> 
     NYC
 }
-  dta[[10]] %>% 
+dta[[10]] %>% 
   bind_rows(NYC) -> 
   NYC
 
@@ -274,7 +274,10 @@ by_borough <- internal2_imputed %>%
   group_by(Borough) %>% summarise(Score = mean(Index))
 ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point(size=5)
 
-## Combine the 3 data sets
+
+
+
+##### Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
 
 ## Compute the combined quality index
@@ -329,7 +332,7 @@ theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch
 
 ##### Run external structure together
-external_imputed_irt <- external_imputed[,c(1:3,7,8,11,12,15)]
+external_imputed_irt <- external_imputed[,c(1:3,7,8,11,12,15)] 
 mod_2pl <- grm(external_imputed_irt)
 summary(mod_2pl)
 plot(mod_2pl)
@@ -365,7 +368,6 @@ theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rat
                                    `Holes in floors`) %>% 
   ggplot(aes(x = z1, y = Total)) + geom_point()
 
-
 ##### Run internal and external variables together
 total_irt <- bind_cols(internal_irt, external_imputed_irt)
 mod_2pl <- grm(total_irt)
@@ -373,12 +375,8 @@ summary(mod_2pl)
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch$score.dat %>% View()
-theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
-                                   `Heating equipment breakdown` + 
-                                   `Cracks of holes in interior walls` +
-                                   `Holes in floors`) %>% 
-  ggplot(aes(x = z1, y = Total)) + geom_point()
 
+##### Join IRT to overall data set
 imputed <- left_join(imputed,theta.rasch$score.dat)
 imputed <- imputed[,-c(38,39,41)]
 
