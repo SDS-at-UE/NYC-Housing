@@ -1,5 +1,6 @@
 library(tidyverse)
 library(ggplot2)
+library(ltm)
 
 # Reading in all data
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
@@ -64,7 +65,7 @@ external_imputed[[15]] <- case_when(external_imputed[[15]] == 1 ~ 3,
 # check NA's
 external_imputed %>% mutate_all(., funs(factor(.))) %>% summary()
 
-# Comouting score
+# Computing score
 external_imputed <- external_imputed %>% mutate(score = external_imputed[[1]] + external_imputed[[2]]  
                                                   +external_imputed[[3]] + external_imputed[[7]] 
                                                   +external_imputed[[8]] + external_imputed[[11]] 
@@ -98,7 +99,6 @@ ggplot(by_year) +
   
 
 # By borough
-<<<<<<< HEAD
 by_borough <- external_imputed %>% group_by(Borough,`Tenure 1`) %>% summarise(Score = mean(score))
 by_borough <- by_borough %>% mutate(Score1 = format(Score, digits = 3))
 ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) + 
@@ -106,10 +106,33 @@ ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) +
   geom_text(aes(label=Score1, x = Borough, y = Score, vjust=-1.5), position = position_dodge(width = 0.9)) +
   ylim(0.0,1.5)
 
+# IRT
+external_a <- external_imputed[,c(1:3,7,8,11,12)]
+mod_rasch <- rasch(external_a,start.val = "random")
+summary(mod_rasch)
+
+mod_2pl <- ltm(external_a ~ z1)
+summary(mod_2pl)
+
+theta.rasch <- ltm::factor.scores(mod_2pl)
+
+irt <- theta.rasch$score.dat 
+irt <- irt %>% mutate(Total = irt[[1]] + irt[[2]] + irt[[3]] + irt[[4]] + irt[[5]] + irt[[6]] + irt[[7]]) 
+ggplot(irt, aes(x = z1 , y = Total)) + geom_point()
+
+irt %>% filter(Total ==1)
+  # 1. Rotton/loose windows  1.659920
+  # 2. Major cracks in outside walls  1.598761
+  # 3. Broken or missing windows 1.491062
+  # 4. Loose, broken, or missing steps 1.464491
+  # 5. Loose, broken, or missing stair 1.429216
+  # 6. Boarded up windows 1.426477
+  # 7. Loose or hanging cornice, roofing, or other materia 1.331211
+for (i in 1:7) {
+  a <- c(1.659920, 1.598761, 1.491062, 1.464491, 1.429216, 1.426477, 1.331211)
+  external_a[[i]] <- ifelse(external_a[[i]] == 0, 0, a[i])
+}
 
 
-
-=======
-by_borough <- external_imputed %>% group_by(Borough) %>% summarise(Score = mean(score))
-ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point() + geom_line()
->>>>>>> 7c99bd92ba90904d4873ee3e05f5cdc398a10486
+external_a <- external_a %>% mutate(Score = rowSums(.))
+ggplot(external_a) + geom_histogram(aes(x = Score), bin = 40)
