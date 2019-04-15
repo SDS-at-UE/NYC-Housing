@@ -284,6 +284,9 @@ imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
 imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
 
+### write_csv(imputed, "imputed_data.csv")
+imputed <- read_csv("imputed_data.csv")
+
 ##### Combined graphs of all 3
 ## Graph by year
 by_year <- imputed %>% group_by(`Year Identifier`) %>% 
@@ -332,23 +335,29 @@ theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch
 
 ##### Run external structure together
-external_imputed_irt <- external_imputed[,c(1:3,7,8,11,12,15)] 
-mod_2pl <- grm(external_imputed_irt)
+external_imputed_irt <- external_imputed %>% filter(`Year Identifier` == 2017)
+external_imputed_irt <- external_imputed_irt[,c(1:3,7,8,11,12,15)] 
+external_imputed_irt$`Condition of building` <- 
+  ifelse(external_imputed_irt$`Condition of building` == 2, 1, 
+         external_imputed_irt$`Condition of building`)
+mod_2pl <- ltm(external_imputed_irt ~ z1)
 summary(mod_2pl)
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch$score.dat %>% View()
 
 ##### Run internal structure together
-internal2_imputed_irt <- internal2_imputed[,c(3,4)]
+internal2_imputed_irt <- internal2_imputed %>% filter(`Year Identifier` == 2017)
+internal2_imputed_irt <- internal2_imputed_irt[,c(3,4)]
 mod_2pl <- ltm(internal2_imputed_irt ~ z1)
 summary(mod_2pl)
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch$score.dat %>% View()
 
-##### Run internval environment together
-internal_imputed_irt <- internal_imputed[,c(1:3)]
+##### Run internal environment together
+internal_imputed_irt <- internal_imputed %>% filter(`Year Identifier` == 2017)
+internal_imputed_irt <- internal_imputed_irt[,c(1:3)]
 mod_2pl <- ltm(internal_imputed_irt ~ z1)
 summary(mod_2pl)
 plot(mod_2pl)
@@ -370,8 +379,8 @@ theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rat
 
 ##### Run internal and external variables together
 total_irt <- bind_cols(internal_irt, external_imputed_irt)
-mod_2pl <- grm(total_irt)
-summary(mod_2pl)
+mod_2pl <- ltm(total_irt ~ z1)
+summary(mod_2pl) %>% View()
 plot(mod_2pl)
 theta.rasch <- ltm::factor.scores(mod_2pl)
 theta.rasch$score.dat %>% View()
@@ -381,3 +390,4 @@ imputed <- left_join(imputed,theta.rasch$score.dat)
 imputed <- imputed[,-c(38,39,41)]
 
 imputed %>% ggplot(aes(x=z1, y = QualityIndex)) + geom_point()
+
