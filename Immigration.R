@@ -133,6 +133,21 @@ selfid %>% select(`Year Householder Moved into Unit`, `Year Identifier`) %>% tab
 selfid %>% select(`Year Built Recode`, `Year Identifier`) %>% table()
 selfid %>% select(`Total Household Income Recode`, `Year Identifier`) %>% table()
 
+selfid %>% group_by(`Year Built Recode`) %>% summarise(total = n(),
+                                                      total_immigrant = sum(`Moved to the U.S. as immigrant` == 1), 
+                                                      total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9)),
+                                                      total_na = sum(`Moved to the U.S. as immigrant` == 8),
+                                                      Immigrant = total_immigrant/total, 
+                                                      Citizen = total_citizen/total,
+                                                      Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  ggplot(aes(x = `Year Built Recode`, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "Year Built", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20)) #### ADJUST X AXIS LABEL
+
 
 #impute housing quality index for immigrants
 NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000, 

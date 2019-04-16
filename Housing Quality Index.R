@@ -2,6 +2,7 @@ library(readr)
 library(tidyverse)
 library(plm)
 library(ltm)
+select <- dplyr::select
 set.seed(6969)
 
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
