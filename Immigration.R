@@ -48,6 +48,8 @@ NYC[[220]] <- factor(NYC[[220]])
 
 ### Add graphs about percentage of immigrants year over year, borough to borough
 
+##### WRITE A CSV
+
 ### Immigrants by borough
 ### Add weights!
 selfid <- NYC %>% filter(`Year Identifier` %in% c(1999,2002,2005,2008,2011,2014,2017))
@@ -67,13 +69,15 @@ selfid %>% group_by(Borough) %>% summarise(total = n(),
         title = element_text(size = 20))
 
 ### Immigrants by year
-selfid$`Household Sampling Weight (5 implied decimal places)`
+selfid$`Household Sampling Weight (5 implied decimal places)` <-
+  selfid$`Household Sampling Weight (5 implied decimal places)`/100000
+
 selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                            total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                            total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
-                                           total_na = sum(`Moved to the U.S. as immigrant` == 8 * `Household Sampling Weight (5 implied decimal places)`),
+                                           total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
                                            Immigrant = total_immigrant/total, Citizen = total_citizen/total,
-                                           Unidentified = total_na/total) %>% 
+                                           Unidentified = total_na/total) %>%
   dplyr::select(-starts_with("total")) %>%
   gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
   ggplot(aes(x = `Year Identifier`, y = percent)) + 
@@ -88,7 +92,7 @@ selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Samp
 immigrant <- NYC %>% filter(`Moved to the U.S. as immigrant` == 1 | 
                !(`Place of Householder's Father's Birth` %in% c(7,9,10,98)) |
                !(`Place of Householder's Mother's Birth` %in% c(7,9,10,98)))
-
+immigrant <- immigrant %>% filter(`Year Identifier` %in% c(1999,2002,2005,2008,2011,2014,2017))
 immigrant <- immigrant %>% mutate(selfidflag = ifelse(`Moved to the U.S. as immigrant` == 1, 1, 0))
 immigrant <- immigrant %>% 
   mutate(fatherflag = ifelse(!(`Place of Householder's Father's Birth`) %in% c(7,9,10,98) , 1, 0))
@@ -146,7 +150,10 @@ selfid %>% group_by(`Year Built Recode`) %>% summarise(total = n(),
   labs(title = "Citizen vs. Non-Citizens", x = "Year Built", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
-        title = element_text(size = 20)) #### ADJUST X AXIS LABEL
+        title = element_text(size = 20)) +
+  scale_x_continuous(breaks = seq(1,10, by = 3), labels = c("old", "not so\nold", "not\nso new", "new"))
+
+#### ADJUST X AXIS LABEL
 
 
 #impute housing quality index for immigrants
