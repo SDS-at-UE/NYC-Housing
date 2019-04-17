@@ -252,6 +252,10 @@ imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 library(ltm)
 NYC <- read_csv("imputed_NYC.csv")
 
+
+
+
+
 NYC <- NYC %>% filter(`Year Identifier2` == 2017)
 NYC <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
 NYC <- NYC[,-c(4:6, 9:10, 13:21, 25:31, 34:37)]
@@ -280,3 +284,29 @@ theta.rasch$score.dat %>%
 
 theta.rasch$score.dat %>% select(-c(13:14,16)) %>% right_join(NYC) -> NYCZ
 NYCZ %>% View()
+
+
+###########
+
+NYC2 <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
+
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+results <- NULL
+for (i in years) {
+  NYC2 %>% filter(`Year Identifier2` == i) -> NYC3
+  NYC4 <- NYC3[,-c(4:6, 9:10, 13:21, 25:31, 34:37)]
+  
+  mod_2pl <- ltm(NYC4 ~ z1)
+  coefficients(mod_2pl) -> coeff
+  data.frame(coeff) %>% mutate(year = i, problem = rownames(coeff)) %>% 
+    dplyr::select(problem, year, Dffclt, Dscrmn) %>% bind_rows(results)  -> results
+}
+
+cal_prob <- function(x, a, b){
+  exp(a*(x-b))/(1 +exp(a*(x-b)))
+}
+
+cal_prob(seq(-3,3, by = .1), Dscrmn, Dffclt)
+
+### Difficulty parameter over years #### 
+results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + geom_line() + labs(title = "Difficulty Over Years")
