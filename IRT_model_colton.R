@@ -309,4 +309,5 @@ cal_prob <- function(x, a, b){
 cal_prob(seq(-3,3, by = .1), Dscrmn, Dffclt)
 
 ### Difficulty parameter over years #### 
-results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + geom_line() + labs(title = "Difficulty Over Years")
+results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "Difficulty Over Years")
