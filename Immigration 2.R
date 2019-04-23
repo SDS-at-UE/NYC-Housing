@@ -7,9 +7,11 @@ set.seed(6969)
 NYC <- read_csv("immigration.csv")
 
 ### Make sampling weights proper weight
-selfid <- NYC %>% filter(`Year Identifier` %in% c(1999,2002,2005,2008,2011,2014,2017))
+selfid <- NYC %>% filter(`Year Identifier` %in% c(2002,2005,2008,2011,2014,2017))
 selfid$`Household Sampling Weight (5 implied decimal places)` <-
   selfid$`Household Sampling Weight (5 implied decimal places)`/100000
+
+##### CHANGE TO NATIVES VS IMMIGRANTS
 
 ### Immigrants by borough
 selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
@@ -57,6 +59,7 @@ immigrant <- immigrant %>%
 immigrant <- immigrant %>% mutate(parentsflag = ifelse(fatherflag == 1 & motherflag == 1, 1, 0))
 
 ### Calculate percents of self-id'd 1st gen immigrants and second generation immigrants
+#### Add weights to this!!!!
 immigrant %>% dplyr::select(selfidflag) %>% summarise(immi = sum(selfidflag), total = n(),
                                                       percent = immi/total)
 immigrant %>% dplyr::select(fatherflag) %>% summarise(father = sum(fatherflag), total = n(), 
@@ -70,8 +73,7 @@ immigrant %>% dplyr::select(parentsflag) %>% summarise(parents = sum(parentsflag
 immigrant$`Tenure 1` <- ifelse(immigrant$`Tenure 1` == 1,"Own","Rent")
 immigrant$`Tenure 1` <- as.factor(immigrant$`Tenure 1`)
 
-
-## Bar charts of rent vs own
+## Bar charts of own vs rent
 selfid %>% group_by(`Tenure 1`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                               total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                               total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
@@ -84,20 +86,24 @@ selfid %>% group_by(`Tenure 1`) %>% summarise(total = sum(`Household Sampling We
   labs(title = "Citizen vs. Non-Citizens", x = "Own vs. Rent", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
-        title = element_text(size = 20))
+        title = element_text(size = 20)) +
+  scale_x_continuous(breaks = c(1,9), labels = c("Own", "Rent"))
 
 ## Age, income, how long you've stayed in the same unit, how long been in NYC
 selfid %>% select(`Householder's Age Recode`, `Year Identifier`) %>% table()
 selfid %>% select(`Householder's Race`, `Year Identifier`) %>% table()
 selfid %>% select(`Year Householder Moved into Unit`, `Year Identifier`) %>% table()
 selfid %>% select(`Year Built Recode`, `Year Identifier`) %>% table()
+### Flip sign on income for negatives
 selfid %>% select(`Total Household Income Recode`, `Year Identifier`) %>% table()
 
+##### Try 10 year increments
+##### Do for every year individually
 ### Householder's Age
-selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` <= 35 ~ 0,
-                                        `Householder's Age Recode` > 35 & `Householder's Age Recode` <= 55 ~ 1,
-                                        `Householder's Age Recode` > 55 & `Householder's Age Recode` <= 75 ~ 2,
-                                        `Householder's Age Recode` > 75 ~ 3))
+selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` < 35 ~ 0,
+                                        `Householder's Age Recode` < 55 ~ 1,
+                                        `Householder's Age Recode` < 75 ~ 2,
+                                        TRUE ~ 3))
 selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                              total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                              total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
@@ -111,13 +117,16 @@ selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Wei
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  scale_x_continuous(breaks = seq(0,3, by = 1), labels = c("15-35", "36-55", "56-75", "76+"))
+  scale_x_continuous(breaks = seq(0,3, by = 1), labels = c("15-35", "35-55", "55-75", "75+"))
 
 ### Householder's Race
-# Waaaaaay too complicated to try to figure out, not going to use this
+#### Large case when, end with mixed race
+str_sub(`Householder's Race`, 1, 2) == "0100000000000000000000"
 
 ### Year moved into unit
 ## Match years to results contained in 2014
+#### Count number of years difference between current year and year moved in
+#### Do individual years...facet wrap
 selfid <- selfid %>% mutate(yearmoved = case_when(`Year Householder Moved into Unit` >= 2012 ~ 1,
                                                   `Year Householder Moved into Unit` < 2012 & `Year Householder Moved into Unit`>= 2009 ~ 2,
                                                   `Year Householder Moved into Unit` < 2009 & `Year Householder Moved into Unit` >= 2006 ~ 3,
@@ -148,6 +157,9 @@ selfid %>% group_by(yearmoved) %>% summarise(total = sum(`Household Sampling Wei
                                                             "'06-\n'08", "'09-\n'11", ">'12"))
 
 ### Year Dwelling Built
+#### Start with 2002, group by decade
+#### Be careful with labels
+#### Individual years, facet wrap
 selfid %>% group_by(`Year Built Recode`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                        total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                                        total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
