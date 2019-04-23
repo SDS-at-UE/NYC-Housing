@@ -311,3 +311,25 @@ cal_prob(seq(-3,3, by = .1), Dscrmn, Dffclt)
 ### Difficulty parameter over years #### 
 results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
   geom_line() + labs(title = "Difficulty Over Years")
+
+results %>% filter(str_detect(problem, "^Condition")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "External Difficulty Over Years", y = "Difficulty", x = "Years") + 
+  scale_color_discrete(labels = c("Loose or hanging cornice,\n roofing, or other material",
+                                  "Major cracks in outside walls", "Loose, broken, or missing stair",
+                                  "Loose, broken, or missing steps",
+                                  "Boarded up windows", "Broken or missing windows",
+                                  "Rotten or loose windows")) +  theme(legend.position = "bottom") +
+  ylim(1,9.5) -> graph1
+
+
+results %>% filter(str_detect(tolower(problem), "holes")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + 
+  labs(title = "Internal Difficulty Over Years", y = "Difficulty", x = "Years") +  theme(legend.position = "bottom") + 
+  ylim(1,9.5) -> graph2
+
+results %>% filter(str_detect(problem, "equipment|mice|waterleakage")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "Internal Environment Difficulty Over Years", y = "Difficulty", x = "Years") +
+  theme(legend.position = "bottom") + ylim(1,9.5) -> graph3
+
+library(ggplot2)
+grid.arrange(graph1, graph2, graph3, ncol = 3)
