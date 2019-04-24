@@ -280,12 +280,14 @@ ggplot(by_borough,aes(x = Borough, y = Score, group = 0)) + geom_point(size=5)
 
 ##### Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
+imputed$Weights <- NYC$`Household Sampling Weight (5 implied decimal places)`
+imputed$Weights <- imputed$Weights/100000
 
 ## Compute the combined quality index
 imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
 
-### write_csv(imputed, "imputed_data.csv")
+###write_csv(imputed, "imputed_data.csv")
 imputed <- read_csv("imputed_data.csv")
 
 ##### Combined graphs of all 3
@@ -321,74 +323,105 @@ ggplot(by_borough,aes(x = Borough, y = Score, fill = `Tenure 1`)) +
   ylim(0,2.75)
 
 
-#### Run IRT 
-##### Run everything together
-imputed_irt <- imputed %>% filter(`Year Identifier` == 2017)
-imputed_irt <- imputed_irt[,-c(15:21,25:31,34:37)]
-mod_rasch <- rasch(imputed_irt, start.val = "random")
+# #### Run IRT 
+# ##### Run everything together
+# imputed_irt <- imputed %>% filter(`Year Identifier` == 2017)
+# imputed_irt <- imputed_irt[,-c(15:21,25:31,34:37)]
+# mod_rasch <- rasch(imputed_irt, start.val = "random")
+# summary(mod_rasch)
+# plot(mod_rasch, type = "IIC")
+# 
+# mod_2pl <- ltm(imputed_irt ~ z1)
+# summary(mod_2pl)
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch
+# 
+# ##### Run external structure together
+# external_imputed_irt <- external_imputed %>% filter(`Year Identifier` == 2017)
+# external_imputed_irt <- external_imputed_irt[,c(1:3,7,8,11,12,15)] 
+# external_imputed_irt$`Condition of building` <- 
+#   ifelse(external_imputed_irt$`Condition of building` == 2, 1, 
+#          external_imputed_irt$`Condition of building`)
+# mod_2pl <- ltm(external_imputed_irt ~ z1)
+# summary(mod_2pl)
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch$score.dat %>% View()
+# 
+# ##### Run internal structure together
+# internal2_imputed_irt <- internal2_imputed %>% filter(`Year Identifier` == 2017)
+# internal2_imputed_irt <- internal2_imputed_irt[,c(3,4)]
+# mod_2pl <- ltm(internal2_imputed_irt ~ z1)
+# summary(mod_2pl)
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch$score.dat %>% View()
+# 
+# ##### Run internal environment together
+# internal_imputed_irt <- internal_imputed %>% filter(`Year Identifier` == 2017)
+# internal_imputed_irt <- internal_imputed_irt[,c(1:3)]
+# mod_2pl <- ltm(internal_imputed_irt ~ z1)
+# summary(mod_2pl)
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch
+# 
+# ###### Run all internal variables together
+# internal_irt <- bind_cols(internal_imputed_irt, internal2_imputed_irt)
+# mod_2pl <- ltm(internal_irt ~ z1)
+# summary(mod_2pl)
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch$score.dat %>% View()
+# theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
+#                                    `Heating equipment breakdown` + 
+#                                    `Cracks of holes in interior walls` +
+#                                    `Holes in floors`) %>% 
+#   ggplot(aes(x = z1, y = Total)) + geom_point()
+# 
+# ##### Run internal and external variables together
+# total_irt <- bind_cols(internal_irt, external_imputed_irt)
+# mod_2pl <- ltm(total_irt ~ z1)
+# summary(mod_2pl) %>% View()
+# plot(mod_2pl)
+# theta.rasch <- ltm::factor.scores(mod_2pl)
+# theta.rasch$score.dat %>% View()
+# 
+# ##### Join IRT to overall data set
+# imputed <- left_join(imputed,theta.rasch$score.dat)
+# imputed <- imputed[,-c(38,39,41)]
+# 
+# imputed %>% ggplot(aes(x=z1, y = QualityIndex)) + geom_point()
+
+# IRT
+external_a <- external_imputed[,c(1:3,7,8,11,12)]
+mod_rasch <- rasch(external_a,start.val = "random")
 summary(mod_rasch)
-plot(mod_rasch, type = "IIC")
 
-mod_2pl <- ltm(imputed_irt ~ z1)
+mod_2pl <- ltm(external_a ~ z1)
 summary(mod_2pl)
-plot(mod_2pl)
+
 theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch
 
-##### Run external structure together
-external_imputed_irt <- external_imputed %>% filter(`Year Identifier` == 2017)
-external_imputed_irt <- external_imputed_irt[,c(1:3,7,8,11,12,15)] 
-external_imputed_irt$`Condition of building` <- 
-  ifelse(external_imputed_irt$`Condition of building` == 2, 1, 
-         external_imputed_irt$`Condition of building`)
-mod_2pl <- ltm(external_imputed_irt ~ z1)
-summary(mod_2pl)
-plot(mod_2pl)
-theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch$score.dat %>% View()
+irt <- theta.rasch$score.dat 
+irt <- irt %>% mutate(Total = irt[[1]] + irt[[2]] + irt[[3]] + irt[[4]] + irt[[5]] + irt[[6]] + irt[[7]]) 
+ggplot(irt, aes(x = z1 , y = Total)) + geom_point()
 
-##### Run internal structure together
-internal2_imputed_irt <- internal2_imputed %>% filter(`Year Identifier` == 2017)
-internal2_imputed_irt <- internal2_imputed_irt[,c(3,4)]
-mod_2pl <- ltm(internal2_imputed_irt ~ z1)
-summary(mod_2pl)
-plot(mod_2pl)
-theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch$score.dat %>% View()
+irt %>% filter(Total ==1)
+# 1. Rotton/loose windows  1.659920
+# 2. Major cracks in outside walls  1.598761
+# 3. Broken or missing windows 1.491062
+# 4. Loose, broken, or missing steps 1.464491
+# 5. Loose, broken, or missing stair 1.429216
+# 6. Boarded up windows 1.426477
+# 7. Loose or hanging cornice, roofing, or other material 1.331211
+for (i in 1:7) {
+  a <- c(1.659920, 1.598761, 1.491062, 1.464491, 1.429216, 1.426477, 1.331211)
+  external_a[[i]] <- ifelse(external_a[[i]] == 0, 0, a[i])
+}
 
-##### Run internal environment together
-internal_imputed_irt <- internal_imputed %>% filter(`Year Identifier` == 2017)
-internal_imputed_irt <- internal_imputed_irt[,c(1:3)]
-mod_2pl <- ltm(internal_imputed_irt ~ z1)
-summary(mod_2pl)
-plot(mod_2pl)
-theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch
 
-###### Run all internal variables together
-internal_irt <- bind_cols(internal_imputed_irt, internal2_imputed_irt)
-mod_2pl <- ltm(internal_irt ~ z1)
-summary(mod_2pl)
-plot(mod_2pl)
-theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch$score.dat %>% View()
-theta.rasch$score.dat %>% mutate(Total = waterleakage + `Presence of mice or rats` + 
-                                   `Heating equipment breakdown` + 
-                                   `Cracks of holes in interior walls` +
-                                   `Holes in floors`) %>% 
-  ggplot(aes(x = z1, y = Total)) + geom_point()
-
-##### Run internal and external variables together
-total_irt <- bind_cols(internal_irt, external_imputed_irt)
-mod_2pl <- ltm(total_irt ~ z1)
-summary(mod_2pl) %>% View()
-plot(mod_2pl)
-theta.rasch <- ltm::factor.scores(mod_2pl)
-theta.rasch$score.dat %>% View()
-
-##### Join IRT to overall data set
-imputed <- left_join(imputed,theta.rasch$score.dat)
-imputed <- imputed[,-c(38,39,41)]
-
-imputed %>% ggplot(aes(x=z1, y = QualityIndex)) + geom_point()
+external_a <- external_a %>% mutate(Score = rowSums(.))
+ggplot(external_a) + geom_histogram(aes(x = Score), bin = 40)
 

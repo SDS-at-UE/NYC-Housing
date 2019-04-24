@@ -46,9 +46,8 @@ NYC[[220]] <- case_when(NYC[[220]] == 91 ~ 1991,
                                    TRUE ~ as.double(NYC[[220]]))
 NYC[[220]] <- factor(NYC[[220]])
 
-### Add graphs about percentage of immigrants year over year, borough to borough
-
-##### WRITE A CSV
+NYC <- NYC[,-c(1,53:76,223:296)]
+###write_csv(NYC, "immigration.csv")
 
 ### Immigrants by borough
 ### Add weights!
