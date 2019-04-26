@@ -250,7 +250,7 @@ imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
 # Building a model for zscore
 library(ltm)
-NYC <- read_csv("imputed_NYC.csv")
+NYC <- read_csv("imputed_data2.csv")
 
 
 
@@ -316,6 +316,22 @@ for (i in years) {
   NYC3 %>% bind_rows(results2) -> results2
 }
 
+library(scales)
+results2 %>% mutate(final_index = rescale(z1)) -> results2
+
+cal_z <- function(x){
+  exp(x)/(1+exp(x))
+}
+
+results2 %>% mutate(final_index = cal_z(z1)) -> results2
+results2 %>% group_by(Borough) %>% summarise(Average = mean(final_index)) %>% 
+  ggplot(aes(y = Average, x = Borough)) + geom_bar(stat = "identity")
+
+results2 %>% group_by(Sub Borough) %>% summarise(Average = mean(final_index)) %>% 
+  ggplot(aes(y = Average, x = Borough)) + geom_bar(stat = "identity")
+
+
+#########################################################################################
 cal_prob <- function(x, a, b){
   exp(a*(x-b))/(1 +exp(a*(x-b)))
 }
