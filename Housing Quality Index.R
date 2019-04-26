@@ -85,6 +85,7 @@ internal_imputed[[6]] <- factor(internal_imputed[[6]])
 
 # Formatting borough
 internal_imputed$Borough <- NYC$Borough
+internal_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
 internal_imputed[[8]] <- case_when(internal_imputed[[8]] == 1 ~ "Bronx",
                                     internal_imputed[[8]] == 2 ~ "Brooklyn",
                                     internal_imputed[[8]] == 3 ~ "Manhattan",
@@ -165,6 +166,7 @@ external_imputed[[18]] <- case_when(external_imputed[[18]] == 91 ~ 1991,
 external_imputed[[18]] <- factor(external_imputed[[18]])
 
 # Renaming borough
+external_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
 external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
                                     external_imputed[[19]] == 2 ~ "Brooklyn",
                                     external_imputed[[19]] == 3 ~ "Manhattan",
@@ -219,6 +221,7 @@ internal2_imputed %>% dplyr::select(`Number of bedrooms`, `Number of rooms`,
 ### Add Year and Borough to the data set
 internal2_imputed$`Year Identifier` <- NYC$`Year Identifier`
 internal2_imputed$Borough <- NYC$Borough
+internal2_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
 
 # Formatting year
 internal2_imputed[[5]] <- case_when(internal2_imputed[[5]] == 91 ~ 1991,
@@ -287,8 +290,8 @@ imputed$Weights <- imputed$Weights/100000
 imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
 
-###write_csv(imputed, "imputed_data.csv")
-imputed <- read_csv("imputed_data.csv")
+###write_csv(imputed, "imputed_data2.csv")
+imputed <- read_csv("imputed_data2.csv")
 
 ##### Combined graphs of all 3
 ## Graph by year
