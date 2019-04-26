@@ -11,20 +11,18 @@ selfid <- NYC %>% filter(`Year Identifier` %in% c(2002,2005,2008,2011,2014,2017)
 selfid$`Household Sampling Weight (5 implied decimal places)` <-
   selfid$`Household Sampling Weight (5 implied decimal places)`/100000
 
-##### CHANGE TO NATIVES VS IMMIGRANTS
-
 ### Immigrants by borough
 selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                            total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                           total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                           total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                            total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                           Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                           Immigrant = total_immigrant/total, Native = total_native/total,
                                            Unidentified = total_na/total) %>% 
   dplyr::select(-starts_with("total")) %>%
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = Borough, y = percent)) + 
   geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "Borough", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Borough", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20))
@@ -32,12 +30,12 @@ selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weigh
 ### Immigrants by year
 selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                      total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                                     total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                                     total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                                      total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                                     Immigrant = total_immigrant/total, Citizen = total_citizen/total,
-                                                     Unidentified = total_na/total) %>%
+                                                     Immigrant = total_immigrant/total, Native = total_native/total,
+                                                     Unidentified = total_na/total) %>% 
   dplyr::select(-starts_with("total")) %>%
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = `Year Identifier`, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "Years", y = "Percent", legend = "Type") +
@@ -60,13 +58,16 @@ immigrant <- immigrant %>% mutate(parentsflag = ifelse(fatherflag == 1 & motherf
 
 ### Calculate percents of self-id'd 1st gen immigrants and second generation immigrants
 #### Add weights to this!!!!
-immigrant %>% dplyr::select(selfidflag) %>% summarise(immi = sum(selfidflag), total = n(),
-                                                      percent = immi/total)
-immigrant %>% dplyr::select(fatherflag) %>% summarise(father = sum(fatherflag), total = n(), 
+immigrant %>% select(selfidflag, `Household Sampling Weight (5 implied decimal places)`) %>% 
+  mutate(weight = selfidflag*`Household Sampling Weight (5 implied decimal places)`) %>%
+  summarise(immi = sum(weight),
+            total = sum(`Household Sampling Weight (5 implied decimal places)`),
+            percent = immi/total)
+immigrant %>% select(fatherflag) %>% summarise(father = sum(fatherflag), total = n(), 
                                                       percent = father/total)
-immigrant %>% dplyr::select(motherflag) %>% summarise(mother = sum(motherflag), total = n(), 
+immigrant %>% select(motherflag) %>% summarise(mother = sum(motherflag), total = n(), 
                                                       percent = mother/total)
-immigrant %>% dplyr::select(parentsflag) %>% summarise(parents = sum(parentsflag), total = n(), 
+immigrant %>% select(parentsflag) %>% summarise(parents = sum(parentsflag), total = n(), 
                                                        percent = parents/total)
 
 ## Name rent versus own
@@ -76,11 +77,11 @@ immigrant$`Tenure 1` <- as.factor(immigrant$`Tenure 1`)
 ## Bar charts of own vs rent
 selfid %>% group_by(`Tenure 1`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                               total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                              total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                              total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                               total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                              Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                              Immigrant = total_immigrant/total, Native = total_native/total,
                                               Unidentified = total_na/total) %>% 
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = `Tenure 1`, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "Own vs. Rent", y = "Percent", legend = "Type") +
@@ -106,11 +107,11 @@ selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` < 3
                                         TRUE ~ 3))
 selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                              total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                             total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                             total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                              total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                             Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                             Immigrant = total_immigrant/total, Native = total_native/total,
                                              Unidentified = total_na/total) %>% 
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = agerecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
@@ -141,11 +142,11 @@ selfid <- selfid %>% mutate(yearmoved = case_when(`Year Householder Moved into U
 
 selfid %>% group_by(yearmoved) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                              total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                             total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                             total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                              total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                             Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                             Immigrant = total_immigrant/total, Native = total_native/total,
                                              Unidentified = total_na/total) %>% 
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = yearmoved, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "Year Moved In", y = "Percent", legend = "Type") +
@@ -162,11 +163,11 @@ selfid %>% group_by(yearmoved) %>% summarise(total = sum(`Household Sampling Wei
 #### Individual years, facet wrap
 selfid %>% group_by(`Year Built Recode`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                        total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
-                                                       total_citizen = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                                       total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                                        total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
-                                                       Immigrant = total_immigrant/total, Citizen = total_citizen/total,
+                                                       Immigrant = total_immigrant/total, Native = total_native/total,
                                                        Unidentified = total_na/total) %>% 
-  gather(key = "type", value = "percent", Immigrant, Citizen, Unidentified) %>%
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = `Year Built Recode`, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
   labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +

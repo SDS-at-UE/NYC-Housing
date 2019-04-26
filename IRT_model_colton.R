@@ -289,9 +289,10 @@ NYCZ %>% View()
 ###########
 
 NYC2 <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
-
+NYC -> NYC_temp
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
 results <- NULL
+results2 <- NULL
 for (i in years) {
   NYC2 %>% filter(`Year Identifier2` == i) -> NYC3
   NYC4 <- NYC3[,-c(4:6, 9:10, 13:21, 25:31, 34:37)]
@@ -300,6 +301,19 @@ for (i in years) {
   coefficients(mod_2pl) -> coeff
   data.frame(coeff) %>% mutate(year = i, problem = rownames(coeff)) %>% 
     dplyr::select(problem, year, Dffclt, Dscrmn) %>% bind_rows(results)  -> results
+  factor.scores(mod_2pl) -> theta.2pl
+  NYC3 %>% left_join(theta.2pl$score.dat, 
+                         by = c("Condition of Windows: Broken or missing windows", 
+                                "Condition of Windows: Rotten/loose windows", 
+                                "Condition of Windows: Boarded up windows", 
+                                "Condition of Exterior Walls: Major cracks in outside walls", 
+                                "Condition of Exterior Walls: Loose or hanging cornice, roofing, or other materia", 
+                                "Condition of Stairways (Exterior and Interior): Loose, broken, or missing stair", 
+                                "Condition of Stairways (Exterior and Interior): Loose, broken, or missing steps", 
+                                "waterleakage", "Presence of mice or rats", "Heating equipment breakdown", 
+                                "Cracks of holes in interior walls", "Holes in floors")) %>% 
+    dplyr::select(-Obs, -Exp, -se.z1) -> NYC3
+  NYC3 %>% bind_rows(results2) -> results2
 }
 
 cal_prob <- function(x, a, b){
@@ -332,4 +346,5 @@ results %>% filter(str_detect(problem, "equipment|mice|waterleakage")) %>% ggplo
   theme(legend.position = "bottom") + ylim(1,9.5) -> graph3
 
 library(ggplot2)
+library(gridExtra)
 grid.arrange(graph1, graph2, graph3, ncol = 3)
