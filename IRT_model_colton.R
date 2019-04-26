@@ -83,6 +83,8 @@ internal_imputed[[6]] <- factor(internal_imputed[[6]])
 
 # Formatting borough
 internal_imputed$Borough <- NYC$Borough
+internal_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+internal_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 internal_imputed[[8]] <- case_when(internal_imputed[[8]] == 1 ~ "Bronx",
                                    internal_imputed[[8]] == 2 ~ "Brooklyn",
                                    internal_imputed[[8]] == 3 ~ "Manhattan",
@@ -164,6 +166,8 @@ external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
                                     external_imputed[[19]] == 3 ~ "Manhattan",
                                     external_imputed[[19]] == 4 ~ "Queens",
                                     external_imputed[[19]] == 5 ~ "Staten Island")
+external_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+external_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 
 # Renaming status
 external_imputed[[20]] <- ifelse(external_imputed[[20]]==1,"Own","Rent")
@@ -213,6 +217,8 @@ internal2_imputed %>% select(`Number of bedrooms`, `Number of rooms`,
 ### Add Year and Borough to the data set
 internal2_imputed$`Year Identifier` <- NYC$`Year Identifier`
 internal2_imputed$Borough <- NYC$Borough
+internal2_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+internal2_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 
 # Formatting year
 internal2_imputed[[5]] <- case_when(internal2_imputed[[5]] == 91 ~ 1991,
@@ -238,7 +244,7 @@ internal2_imputed <- internal2_imputed %>%
 ## Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
 
-write_csv(imputed, "imputed_NYC.csv")
+###write_csv(imputed, "imputed_NYC2.csv")
 
 imputed <- imputed %>% select(Borough, `Year Identifier`, `Tenure 1`, 
                               score, QIndex, Index)
