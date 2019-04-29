@@ -83,6 +83,8 @@ internal_imputed[[6]] <- factor(internal_imputed[[6]])
 
 # Formatting borough
 internal_imputed$Borough <- NYC$Borough
+internal_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+internal_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 internal_imputed[[8]] <- case_when(internal_imputed[[8]] == 1 ~ "Bronx",
                                    internal_imputed[[8]] == 2 ~ "Brooklyn",
                                    internal_imputed[[8]] == 3 ~ "Manhattan",
@@ -164,6 +166,8 @@ external_imputed[[19]] <- case_when(external_imputed[[19]] == 1 ~ "Bronx",
                                     external_imputed[[19]] == 3 ~ "Manhattan",
                                     external_imputed[[19]] == 4 ~ "Queens",
                                     external_imputed[[19]] == 5 ~ "Staten Island")
+external_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+external_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 
 # Renaming status
 external_imputed[[20]] <- ifelse(external_imputed[[20]]==1,"Own","Rent")
@@ -213,6 +217,8 @@ internal2_imputed %>% select(`Number of bedrooms`, `Number of rooms`,
 ### Add Year and Borough to the data set
 internal2_imputed$`Year Identifier` <- NYC$`Year Identifier`
 internal2_imputed$Borough <- NYC$Borough
+internal2_imputed$`Sub-Borough Area` <- NYC$`Sub-Borough Area`
+internal2_imputed$`Borough and Sub-Borough Area` <- NYC$`Borough and Sub-Borough Area`
 
 # Formatting year
 internal2_imputed[[5]] <- case_when(internal2_imputed[[5]] == 91 ~ 1991,
@@ -238,7 +244,7 @@ internal2_imputed <- internal2_imputed %>%
 ## Combine the 3 data sets
 imputed <- bind_cols(external_imputed, internal_imputed, internal2_imputed)
 
-write_csv(imputed, "imputed_NYC.csv")
+###write_csv(imputed, "imputed_NYC2.csv")
 
 imputed <- imputed %>% select(Borough, `Year Identifier`, `Tenure 1`, 
                               score, QIndex, Index)
@@ -250,7 +256,11 @@ imputed <- imputed %>% mutate(QualityIndex = score + QIndex + Index)
 
 # Building a model for zscore
 library(ltm)
-NYC <- read_csv("imputed_NYC.csv")
+NYC <- read_csv("imputed_data2.csv")
+
+
+
+
 
 NYC <- NYC %>% filter(`Year Identifier2` == 2017)
 NYC <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
@@ -280,3 +290,83 @@ theta.rasch$score.dat %>%
 
 theta.rasch$score.dat %>% select(-c(13:14,16)) %>% right_join(NYC) -> NYCZ
 NYCZ %>% View()
+
+
+###########
+
+NYC2 <- NYC %>% mutate(`Quality Index` = score + QIndex + Index)
+NYC -> NYC_temp
+years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
+results <- NULL
+results2 <- NULL
+for (i in years) {
+  NYC2 %>% filter(`Year Identifier2` == i) -> NYC3
+  NYC4 <- NYC3[,-c(4:6, 9:10, 13:21, 25:31, 34:37)]
+  
+  mod_2pl <- ltm(NYC4 ~ z1)
+  coefficients(mod_2pl) -> coeff
+  data.frame(coeff) %>% mutate(year = i, problem = rownames(coeff)) %>% 
+    dplyr::select(problem, year, Dffclt, Dscrmn) %>% bind_rows(results)  -> results
+  factor.scores(mod_2pl) -> theta.2pl
+  NYC3 %>% left_join(theta.2pl$score.dat, 
+                         by = c("Condition of Windows: Broken or missing windows", 
+                                "Condition of Windows: Rotten/loose windows", 
+                                "Condition of Windows: Boarded up windows", 
+                                "Condition of Exterior Walls: Major cracks in outside walls", 
+                                "Condition of Exterior Walls: Loose or hanging cornice, roofing, or other materia", 
+                                "Condition of Stairways (Exterior and Interior): Loose, broken, or missing stair", 
+                                "Condition of Stairways (Exterior and Interior): Loose, broken, or missing steps", 
+                                "waterleakage", "Presence of mice or rats", "Heating equipment breakdown", 
+                                "Cracks of holes in interior walls", "Holes in floors")) %>% 
+    dplyr::select(-Obs, -Exp, -se.z1) -> NYC3
+  NYC3 %>% bind_rows(results2) -> results2
+}
+
+library(scales)
+results2 %>% mutate(final_index = rescale(z1)) -> results2
+
+cal_z <- function(x){
+  exp(x)/(1+exp(x))
+}
+
+results2 %>% mutate(final_index = cal_z(z1)) -> results2
+results2 %>% group_by(Borough) %>% summarise(Average = mean(final_index)) %>% 
+  ggplot(aes(y = Average, x = Borough)) + geom_bar(stat = "identity")
+
+results2 %>% group_by(Sub Borough) %>% summarise(Average = mean(final_index)) %>% 
+  ggplot(aes(y = Average, x = Borough)) + geom_bar(stat = "identity")
+
+
+#########################################################################################
+cal_prob <- function(x, a, b){
+  exp(a*(x-b))/(1 +exp(a*(x-b)))
+}
+
+cal_prob(seq(-3,3, by = .1), Dscrmn, Dffclt)
+
+### Difficulty parameter over years #### 
+results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "Difficulty Over Years")
+
+results %>% filter(str_detect(problem, "^Condition")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "External Difficulty Over Years", y = "Difficulty", x = "Years") + 
+  scale_color_discrete(labels = c("Loose or hanging cornice,\n roofing, or other material",
+                                  "Major cracks in outside walls", "Loose, broken, or missing stair",
+                                  "Loose, broken, or missing steps",
+                                  "Boarded up windows", "Broken or missing windows",
+                                  "Rotten or loose windows")) +  theme(legend.position = "bottom") +
+  ylim(1,9.5) -> graph1
+
+
+results %>% filter(str_detect(tolower(problem), "holes")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + 
+  labs(title = "Internal Difficulty Over Years", y = "Difficulty", x = "Years") +  theme(legend.position = "bottom") + 
+  ylim(1,9.5) -> graph2
+
+results %>% filter(str_detect(problem, "equipment|mice|waterleakage")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
+  geom_line() + labs(title = "Internal Environment Difficulty Over Years", y = "Difficulty", x = "Years") +
+  theme(legend.position = "bottom") + ylim(1,9.5) -> graph3
+
+library(ggplot2)
+library(gridExtra)
+grid.arrange(graph1, graph2, graph3, ncol = 3)
