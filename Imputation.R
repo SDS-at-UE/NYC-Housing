@@ -1,6 +1,10 @@
 library(tidyverse)
 library(ggplot2)
 library(ltm)
+library(sf)
+library(tmap)
+library(raster)
+library(maptools)
 
 # Reading in all data
 years <- c(1991,1993,1996,1999,2002,2005,2008,2011,2014,2017)
@@ -136,3 +140,5 @@ for (i in 1:7) {
 
 external_a <- external_a %>% mutate(Score = rowSums(.))
 ggplot(external_a) + geom_histogram(aes(x = Score), bin = 40)
+
+
