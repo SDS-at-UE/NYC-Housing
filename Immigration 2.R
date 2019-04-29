@@ -4,7 +4,7 @@ library(plm)
 select <- dplyr::select
 set.seed(6969)
 
-NYC <- read_csv("immigration.csv")
+NYC <- read_csv("immigration.csv", col_types = cols(`Householder's Race` = col_character()))
 
 ### Make sampling weights proper weight
 NYC$`Household Sampling Weight (5 implied decimal places)` <-
@@ -41,7 +41,7 @@ selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Samp
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = `Year Identifier`, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "Years", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Years", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20))
@@ -96,7 +96,7 @@ selfid %>% group_by(`Tenure 1`) %>% summarise(total = sum(`Household Sampling We
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = `Tenure 1`, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "Own vs. Rent", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Own vs. Rent", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
@@ -113,17 +113,17 @@ selfid %>% select(`Total Household Income Recode`, `Year Identifier`) %>% table(
 ##### Try 10 year increments
 ##### Do for every year individually
 ### Householder's Age
-selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` < 35 ~ 0,
-                                        `Householder's Age Recode` < 55 ~ 1,
-                                        `Householder's Age Recode` < 75 ~ 2,
-                                        TRUE ~ 3))
-selfid <- selfid %>% mutate(agerecode2 = case_when(`Householder's Age Recode` < 25 ~ 0,
-                                                   `Householder's Age Recode` < 35 ~ 1,
-                                                   `Householder's Age Recode` < 45 ~ 2,
-                                                   `Householder's Age Recode` < 55 ~ 3,
-                                                   `Householder's Age Recode` < 65 ~ 4,
-                                                   `Householder's Age Recode` < 75 ~ 5,
-                                                   TRUE ~ 6))
+selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` < 35 ~ 1,
+                                        `Householder's Age Recode` < 55 ~ 2,
+                                        `Householder's Age Recode` < 75 ~ 3,
+                                        TRUE ~ 4))
+selfid <- selfid %>% mutate(agerecode2 = case_when(`Householder's Age Recode` < 25 ~ 1,
+                                                   `Householder's Age Recode` < 35 ~ 2,
+                                                   `Householder's Age Recode` < 45 ~ 3,
+                                                   `Householder's Age Recode` < 55 ~ 4,
+                                                   `Householder's Age Recode` < 65 ~ 5,
+                                                   `Householder's Age Recode` < 75 ~ 6,
+                                                   TRUE ~ 7))
 #### Age brackets of 20 years
 selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                              total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
@@ -134,11 +134,11 @@ selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Wei
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = agerecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "House Age", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  scale_x_continuous(breaks = seq(0,3, by = 1), labels = c("15-35", "35-55", "55-75", "75+"))
+  scale_x_continuous(breaks = seq(1,4, by = 1), labels = c("15-35", "35-55", "55-75", "75+"))
 
 #### Age brackets of 10 years
 selfid %>% group_by(agerecode2) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
@@ -150,16 +150,17 @@ selfid %>% group_by(agerecode2) %>% summarise(total = sum(`Household Sampling We
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = agerecode2, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "House Age", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  scale_x_continuous(breaks = seq(0,6, by = 1), labels = c("15-25", "25-35", "35-45", "45-55", 
+  scale_x_continuous(breaks = seq(1,7, by = 1), labels = c("15-25", "25-35", "35-45", "45-55", 
                                                            "55-65", "65-75", "75+"))
 
 ### Householder's Race
 #### Large case when, end with mixed race
-selfid %>% mutate(racerecode = case_when(strcmp(`Householder's Race` == "0100000000000000000000") ~ 0))
+selfid %>% mutate(racerecode = case_when(`Householder's Race` == "1e20" ~ 1,
+                                         etc. etc.))
 
 
 ### Year moved into unit
