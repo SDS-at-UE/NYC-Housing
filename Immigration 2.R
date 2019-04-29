@@ -7,9 +7,12 @@ set.seed(6969)
 NYC <- read_csv("immigration.csv")
 
 ### Make sampling weights proper weight
+NYC$`Household Sampling Weight (5 implied decimal places)` <-
+  NYC$`Household Sampling Weight (5 implied decimal places)`/10000
+
+### Subset to proper years
 selfid <- NYC %>% filter(`Year Identifier` %in% c(2002,2005,2008,2011,2014,2017))
-selfid$`Household Sampling Weight (5 implied decimal places)` <-
-  selfid$`Household Sampling Weight (5 implied decimal places)`/100000
+
 
 ### Immigrants by borough
 selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
@@ -63,12 +66,21 @@ immigrant %>% select(selfidflag, `Household Sampling Weight (5 implied decimal p
   summarise(immi = sum(weight),
             total = sum(`Household Sampling Weight (5 implied decimal places)`),
             percent = immi/total)
-immigrant %>% select(fatherflag) %>% summarise(father = sum(fatherflag), total = n(), 
-                                                      percent = father/total)
-immigrant %>% select(motherflag) %>% summarise(mother = sum(motherflag), total = n(), 
-                                                      percent = mother/total)
-immigrant %>% select(parentsflag) %>% summarise(parents = sum(parentsflag), total = n(), 
-                                                       percent = parents/total)
+immigrant %>% select(fatherflag, `Household Sampling Weight (5 implied decimal places)`) %>% 
+  mutate(weight = fatherflag*`Household Sampling Weight (5 implied decimal places)`) %>%
+  summarise(immi = sum(weight),
+            total = sum(`Household Sampling Weight (5 implied decimal places)`),
+            percent = immi/total)
+immigrant %>% select(motherflag, `Household Sampling Weight (5 implied decimal places)`) %>% 
+  mutate(weight = motherflag*`Household Sampling Weight (5 implied decimal places)`) %>%
+  summarise(immi = sum(weight),
+            total = sum(`Household Sampling Weight (5 implied decimal places)`),
+            percent = immi/total)
+immigrant %>% select(parentsflag, `Household Sampling Weight (5 implied decimal places)`) %>% 
+  mutate(weight = parentsflag*`Household Sampling Weight (5 implied decimal places)`) %>%
+  summarise(immi = sum(weight),
+            total = sum(`Household Sampling Weight (5 implied decimal places)`),
+            percent = immi/total)
 
 ## Name rent versus own
 immigrant$`Tenure 1` <- ifelse(immigrant$`Tenure 1` == 1,"Own","Rent")
@@ -105,6 +117,14 @@ selfid <- selfid %>% mutate(agerecode = case_when(`Householder's Age Recode` < 3
                                         `Householder's Age Recode` < 55 ~ 1,
                                         `Householder's Age Recode` < 75 ~ 2,
                                         TRUE ~ 3))
+selfid <- selfid %>% mutate(agerecode2 = case_when(`Householder's Age Recode` < 25 ~ 0,
+                                                   `Householder's Age Recode` < 35 ~ 1,
+                                                   `Householder's Age Recode` < 45 ~ 2,
+                                                   `Householder's Age Recode` < 55 ~ 3,
+                                                   `Householder's Age Recode` < 65 ~ 4,
+                                                   `Householder's Age Recode` < 75 ~ 5,
+                                                   TRUE ~ 6))
+#### Age brackets of 20 years
 selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                              total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                              total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
@@ -120,9 +140,27 @@ selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Wei
         title = element_text(size = 20)) +
   scale_x_continuous(breaks = seq(0,3, by = 1), labels = c("15-35", "35-55", "55-75", "75+"))
 
+#### Age brackets of 10 years
+selfid %>% group_by(agerecode2) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+                                             total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
+                                             total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                             total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
+                                             Immigrant = total_immigrant/total, Native = total_native/total,
+                                             Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
+  ggplot(aes(x = agerecode2, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20)) +
+  scale_x_continuous(breaks = seq(0,6, by = 1), labels = c("15-25", "25-35", "35-45", "45-55", 
+                                                           "55-65", "65-75", "75+"))
+
 ### Householder's Race
 #### Large case when, end with mixed race
-str_sub(`Householder's Race`, 1, 2) == "0100000000000000000000"
+selfid %>% mutate(racerecode = case_when(strcmp(`Householder's Race` == "0100000000000000000000") ~ 0))
+
 
 ### Year moved into unit
 ## Match years to results contained in 2014
