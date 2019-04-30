@@ -13,9 +13,10 @@ NYC$`Household Sampling Weight (5 implied decimal places)` <-
 ### Subset to proper years
 selfid <- NYC %>% filter(`Year Identifier` %in% c(2002,2005,2008,2011,2014,2017))
 
+selfid$`Borough and Sub-Borough Area`
 
 ### Immigrants by borough
-selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+selfid %>% group_by(`Borough and Sub-Borough Area`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                            total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                            total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                            total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
@@ -23,7 +24,7 @@ selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weigh
                                            Unidentified = total_na/total) %>% 
   dplyr::select(-starts_with("total")) %>%
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
-  ggplot(aes(x = Borough, y = percent)) + 
+  ggplot(aes(x = as.factor(`Borough and Sub-Borough Area`), y = percent)) + 
   geom_bar(aes(fill = type), position = position_dodge(width = 1), stat = "identity") + 
   labs(title = "Natives vs. Immigrants", x = "Borough", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
@@ -44,7 +45,8 @@ selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Samp
   labs(title = "Natives vs. Immigrants", x = "Years", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
-        title = element_text(size = 20))
+        title = element_text(size = 20)) +
+  scale_x_continuous(breaks = c(2002,2005,2008,2011,2014,2017))
 
 ### Percentage of 1st and 2nd generation immigrants, compare and contrast
 ### Make data set, add flags for 1st and 2nd generations
@@ -66,7 +68,8 @@ immigrant %>% select(selfidflag, `Household Sampling Weight (5 implied decimal p
   summarise(immi = sum(weight),
             total = sum(`Household Sampling Weight (5 implied decimal places)`),
             percent = immi/total)
-immigrant %>% select(fatherflag, `Household Sampling Weight (5 implied decimal places)`) %>% 
+immigrant %>% select(fatherflag, `Household Sampling Weight (5 implied decimal places)`, selfidflag) %>% 
+  group_by(selfidflag) %>% 
   mutate(weight = fatherflag*`Household Sampling Weight (5 implied decimal places)`) %>%
   summarise(immi = sum(weight),
             total = sum(`Household Sampling Weight (5 implied decimal places)`),
@@ -134,7 +137,7 @@ selfid %>% group_by(agerecode) %>% summarise(total = sum(`Household Sampling Wei
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = agerecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Natives vs. Immigrants", x = "House Age", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Householder Age", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
@@ -150,7 +153,7 @@ selfid %>% group_by(agerecode2) %>% summarise(total = sum(`Household Sampling We
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = agerecode2, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Natives vs. Immigrants", x = "House Age", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Householder Age", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
@@ -203,6 +206,9 @@ selfid %>% group_by(racerecode) %>% summarise(total = sum(`Household Sampling We
 ## Match years to results contained in 2014
 #### Count number of years difference between current year and year moved in
 #### Do individual years...facet wrap
+
+####### Fix, 1 should be earliest year
+
 selfid <- selfid %>% mutate(yearmoved = case_when(`Year Householder Moved into Unit` >= 2012 ~ 1,
                                                   `Year Householder Moved into Unit` < 2012 & `Year Householder Moved into Unit`>= 2009 ~ 2,
                                                   `Year Householder Moved into Unit` < 2009 & `Year Householder Moved into Unit` >= 2006 ~ 3,
@@ -233,6 +239,9 @@ selfid %>% group_by(yearmoved) %>% summarise(total = sum(`Household Sampling Wei
                                                             "'06-\n'08", "'09-\n'11", ">'12"))
 
 #### Year householder moved into unit by decade
+
+####### Fix, 1 should be earliest year
+
 ## Relevel 2017
 selfid2017 <- selfid %>% filter(`Year Identifier` == 2017) %>% 
   mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2015 ~ 1,
@@ -321,13 +330,14 @@ selfid2000s %>% group_by(yearmovedrecode, newyear) %>% summarise(total = sum(`Ho
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = yearmovedrecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "Years Spent in Current Dwelling", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Years Spent in Current Dwelling", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  facet_wrap(~newyear) + 
+  facet_wrap(~newyear, nrow = 2) + 
   scale_x_continuous(breaks = seq(1,11, by = 1), labels = c("<2", "2-5", "5-8", "8-11", "11-14", "14-19",
                                                             "19-24", "24-29", "29-34", "34-44", ">44"))
+### CHANGE LABELS +1 year
 
 ### Year Dwelling Built
 #### Start with 2002, group by decade
@@ -337,7 +347,7 @@ selfid <- selfid %>% mutate(newyear = case_when(`Year Identifier` == 2017 ~ "201
                                                           `Year Identifier` == 2014 ~ "2010s",
                                                           `Year Identifier` == 2011 ~ "2010s",
                                                           TRUE ~ "2000s"))
-selfid %>% group_by(`Year Built Recode`, newyear) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+selfid %>% group_by(`Year Built Recode`, `Year Identifier`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                        total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                                        total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                                        total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
@@ -350,7 +360,7 @@ selfid %>% group_by(`Year Built Recode`, newyear) %>% summarise(total = sum(`Hou
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  facet_wrap(~newyear) +
+  facet_wrap(~`Year Identifier`) +
   scale_x_continuous(breaks = seq(1,10, by = 3), labels = c("Old", "Not So \nOld", "Not So \nNew", "New"))
 
 
@@ -361,13 +371,10 @@ selfid <- selfid %>% mutate(newincomerecode = case_when(newincome < 25000 ~ 1,
                                               newincome < 50000 ~ 2,
                                               newincome < 75000 ~ 3,
                                               newincome < 100000 ~ 4,
-                                              newincome < 250000 ~ 5,
-                                              newincome < 500000 ~ 6,
-                                              newincome < 1000000 ~ 7,
-                                              newincome < 5000000 ~ 8,
-                                              TRUE ~ 9))
+                                              newincome < 1000000 ~ 5,
+                                              TRUE ~ 6))
 
-selfid %>% group_by(newincomerecode, newyear) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+selfid %>% group_by(newincomerecode, `Year Identifier`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                                 total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                                                 total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                                                 total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
@@ -376,11 +383,11 @@ selfid %>% group_by(newincomerecode, newyear) %>% summarise(total = sum(`Househo
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = newincomerecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Householder Income", y = "Percent", legend = "Type") +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
-  facet_wrap(~newyear)
+  facet_wrap(~`Year Identifier`)
 
 #impute housing quality index for immigrants
 NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000, 
