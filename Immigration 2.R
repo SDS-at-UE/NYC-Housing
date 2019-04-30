@@ -159,9 +159,45 @@ selfid %>% group_by(agerecode2) %>% summarise(total = sum(`Household Sampling We
 
 ### Householder's Race
 #### Large case when, end with mixed race
-selfid %>% mutate(racerecode = case_when(`Householder's Race` == "1e20" ~ 1,
-                                         etc. etc.))
+selfid <- selfid %>% mutate(racerecode = case_when(`Householder's Race` == "1e20" ~ 1,
+                                         `Householder's Race` == "2e18" ~ 2,
+                                         `Householder's Race` == "3e16" ~ 3,
+                                         `Householder's Race` == "4e14" ~ 4,
+                                         `Householder's Race` == "5e12" ~ 5,
+                                         `Householder's Race` == "6e10" ~ 6,
+                                         `Householder's Race` == "7e8" ~ 8,
+                                         `Householder's Race` == "8e6" ~ 7,
+                                         `Householder's Race` == "9e4" ~ 8,
+                                         `Householder's Race` == "1e3" ~ 9,
+                                         `Householder's Race` == "1" ~ 1,
+                                         `Householder's Race` == "2" ~ 2,
+                                         `Householder's Race` == "3" ~ 3,
+                                         `Householder's Race` == "4" ~ 4,
+                                         `Householder's Race` == "5" ~ 5,
+                                         `Householder's Race` == "6" ~ 6,
+                                         `Householder's Race` == "7" ~ 7,
+                                         `Householder's Race` == "8" ~ 8,
+                                         `Householder's Race` == "9" ~ 9,
+                                         `Householder's Race` == "10" ~ 10,
+                                         `Householder's Race` == "11" ~ 10,
+                                         TRUE ~ 10))
 
+selfid %>% group_by(racerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+                                             total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
+                                             total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                             total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
+                                             Immigrant = total_immigrant/total, Native = total_native/total,
+                                             Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
+  ggplot(aes(x = racerecode, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(title = "Natives vs. Immigrants", x = "Race", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20)) +
+  scale_x_continuous(breaks = seq(1,10, by = 1), labels = c("White", "Black", "American Indian", 
+                                                            "Chinese", "Filipino", "Korean",
+                                                            "Indian", "Other Asian", "Islander", "Mixed Race"))
 
 ### Year moved into unit
 ## Match years to results contained in 2014
@@ -196,11 +232,112 @@ selfid %>% group_by(yearmoved) %>% summarise(total = sum(`Household Sampling Wei
                                                             "'90-\n'94", "'95-\n'99", "'00-\n'02", "'03-\n'05", 
                                                             "'06-\n'08", "'09-\n'11", ">'12"))
 
+#### Year householder moved into unit by decade
+## Relevel 2017
+selfid2017 <- selfid %>% filter(`Year Identifier` == 2017) %>% 
+  mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2015 ~ 1,
+                                     `Year Householder Moved into Unit` >= 2012 ~ 2,
+                                     `Year Householder Moved into Unit` >= 2009 ~ 3,
+                                     `Year Householder Moved into Unit` >= 2006 ~ 4,
+                                     `Year Householder Moved into Unit` >= 2003 ~ 5,
+                                     `Year Householder Moved into Unit` >= 1998 ~ 6,
+                                     `Year Householder Moved into Unit` >= 1993 ~ 7,
+                                     `Year Householder Moved into Unit` >= 1988 ~ 8,
+                                     `Year Householder Moved into Unit` >= 1983 ~ 9,
+                                     `Year Householder Moved into Unit` >= 1973 ~ 10,
+                                     TRUE ~ 11))
+
+## Relevel 2011
+selfid2011 <- selfid %>% filter(`Year Identifier` == 2011) %>% 
+  mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2009 ~ 1,
+                                     `Year Householder Moved into Unit` >= 2006 ~ 2,
+                                     `Year Householder Moved into Unit` >= 2003 ~ 3,
+                                     `Year Householder Moved into Unit` >= 2000 ~ 4,
+                                     `Year Householder Moved into Unit` >= 1997 ~ 5,
+                                     `Year Householder Moved into Unit` >= 1992 ~ 6,
+                                     `Year Householder Moved into Unit` >= 1987 ~ 7,
+                                     `Year Householder Moved into Unit` >= 1982 ~ 8,
+                                     `Year Householder Moved into Unit` >= 1977 ~ 9,
+                                     `Year Householder Moved into Unit` >= 1967 ~ 10,
+                                     TRUE ~ 11))
+
+## Relevel 2008
+selfid2008 <- selfid %>% filter(`Year Identifier` == 2008) %>% 
+  mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2006 ~ 1,
+                                     `Year Householder Moved into Unit` >= 2003 ~ 2,
+                                     `Year Householder Moved into Unit` >= 2000 ~ 3,
+                                     `Year Householder Moved into Unit` >= 1997 ~ 4,
+                                     `Year Householder Moved into Unit` >= 1994 ~ 5,
+                                     `Year Householder Moved into Unit` >= 1989 ~ 6,
+                                     `Year Householder Moved into Unit` >= 1984 ~ 7,
+                                     `Year Householder Moved into Unit` >= 1979 ~ 8,
+                                     `Year Householder Moved into Unit` >= 1974 ~ 9,
+                                     `Year Householder Moved into Unit` >= 1964 ~ 10,
+                                     TRUE ~ 11))
+
+## Relevel 2005
+selfid2005 <- selfid %>% filter(`Year Identifier` == 2005) %>% 
+  mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2003 ~ 1,
+                                     `Year Householder Moved into Unit` >= 2000 ~ 2,
+                                     `Year Householder Moved into Unit` >= 1997 ~ 3,
+                                     `Year Householder Moved into Unit` >= 1994 ~ 4,
+                                     `Year Householder Moved into Unit` >= 1991 ~ 5,
+                                     `Year Householder Moved into Unit` >= 1986 ~ 6,
+                                     `Year Householder Moved into Unit` >= 1981 ~ 7,
+                                     `Year Householder Moved into Unit` >= 1976 ~ 8,
+                                     `Year Householder Moved into Unit` >= 1971 ~ 9,
+                                     `Year Householder Moved into Unit` >= 1961 ~ 10,
+                                     TRUE ~ 11))
+
+## Relevel 2002
+selfid2002 <- selfid %>% filter(`Year Identifier` == 2002) %>% 
+  mutate(yearmovedrecode = case_when(`Year Householder Moved into Unit` >= 2000 ~ 1,
+                                     `Year Householder Moved into Unit` >= 1997 ~ 2,
+                                     `Year Householder Moved into Unit` >= 1994 ~ 3,
+                                     `Year Householder Moved into Unit` >= 1991 ~ 4,
+                                     `Year Householder Moved into Unit` >= 1988 ~ 5,
+                                     `Year Householder Moved into Unit` >= 1983 ~ 6,
+                                     `Year Householder Moved into Unit` >= 1978 ~ 7,
+                                     `Year Householder Moved into Unit` >= 1973 ~ 8,
+                                     `Year Householder Moved into Unit` >= 1968 ~ 9,
+                                     `Year Householder Moved into Unit` >= 1958 ~ 10,
+                                     TRUE ~ 11))
+
+selfid2014 <- selfid %>% filter(`Year Identifier` == 2014) %>% 
+  mutate(yearmovedrecode = `Year Householder Moved into Unit`)
+
+selfid2000s <- bind_rows(selfid2002, selfid2005, selfid2008, selfid2011, selfid2014, selfid2017)
+selfid2000s <- selfid2000s %>% mutate(newyear = case_when(`Year Identifier` == 2017 ~ "2010s",
+                                           `Year Identifier` == 2014 ~ "2010s",
+                                           `Year Identifier` == 2011 ~ "2010s",
+                                          TRUE ~ "2000s"))
+
+selfid2000s %>% group_by(yearmovedrecode, newyear) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+                                             total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
+                                             total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                             total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
+                                             Immigrant = total_immigrant/total, Native = total_native/total,
+                                             Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
+  ggplot(aes(x = yearmovedrecode, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "Years Spent in Current Dwelling", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20)) +
+  facet_wrap(~newyear) + 
+  scale_x_continuous(breaks = seq(1,11, by = 1), labels = c("<2", "2-5", "5-8", "8-11", "11-14", "14-19",
+                                                            "19-24", "24-29", "29-34", "34-44", ">44"))
+
 ### Year Dwelling Built
 #### Start with 2002, group by decade
 #### Be careful with labels
 #### Individual years, facet wrap
-selfid %>% group_by(`Year Built Recode`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+selfid <- selfid %>% mutate(newyear = case_when(`Year Identifier` == 2017 ~ "2010s",
+                                                          `Year Identifier` == 2014 ~ "2010s",
+                                                          `Year Identifier` == 2011 ~ "2010s",
+                                                          TRUE ~ "2000s"))
+selfid %>% group_by(`Year Built Recode`, newyear) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
                                                        total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
                                                        total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
                                                        total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
@@ -213,11 +350,37 @@ selfid %>% group_by(`Year Built Recode`) %>% summarise(total = sum(`Household Sa
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
+  facet_wrap(~newyear) +
   scale_x_continuous(breaks = seq(1,10, by = 3), labels = c("Old", "Not So \nOld", "Not So \nNew", "New"))
 
 
 ### Household income
+selfid <- selfid %>% mutate(newincome = ifelse(`Total Household Income Recode` < 0, -`Total Household Income Recode`, 
+                                     `Total Household Income Recode`))
+selfid <- selfid %>% mutate(newincomerecode = case_when(newincome < 25000 ~ 1,
+                                              newincome < 50000 ~ 2,
+                                              newincome < 75000 ~ 3,
+                                              newincome < 100000 ~ 4,
+                                              newincome < 250000 ~ 5,
+                                              newincome < 500000 ~ 6,
+                                              newincome < 1000000 ~ 7,
+                                              newincome < 5000000 ~ 8,
+                                              TRUE ~ 9))
 
+selfid %>% group_by(newincomerecode, newyear) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+                                                                total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
+                                                                total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                                                total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
+                                                                Immigrant = total_immigrant/total, Native = total_native/total,
+                                                                Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
+  ggplot(aes(x = newincomerecode, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(title = "Citizen vs. Non-Citizens", x = "House Age", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
+        title = element_text(size = 20)) +
+  facet_wrap(~newyear)
 
 #impute housing quality index for immigrants
 NYC <- NYC %>% mutate(waterleakage = ifelse(`Year Identifier` > 2000, 
