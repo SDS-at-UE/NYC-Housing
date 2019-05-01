@@ -18,8 +18,8 @@ nyc %>% filter(`Borough and Sub-Borough Area` < 200) %>% tm_shape() +
   tm_fill("Average",title="Quality Index", palette="BuGn")  +
   tm_borders() +
   tm_text("code") +
-  tm_add_legend(type = "text", labels = name[c(1:10)], text = c(101,102,103,104,105,106,107,108,109,110)) +
-  tm_layout(title = "Bronx",legend.outside = TRUE, legend.text.size = 1) 
+  tm_add_legend(type = "text", labels = name[c(1:10)], text = c(101,102,103,104,105,106,107,108,109,110), col = "black") +
+  tm_layout(title = "Bronx",title.size = 1.5, legend.outside = TRUE, legend.text.size = 1) 
 
 
 # Brooklyn
