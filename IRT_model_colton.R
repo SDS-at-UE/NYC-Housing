@@ -324,6 +324,8 @@ cal_z <- function(x){
 }
 
 results2 %>% mutate(final_index = cal_z(z1)) -> results2
+write_csv(results2, "Index_Data.csv")
+
 results2 %>% group_by(Borough) %>% summarise(Average = mean(final_index)) %>% 
   ggplot(aes(y = Average, x = Borough)) + geom_bar(stat = "identity")
 
