@@ -16,9 +16,9 @@ for (i in 1:10) {
 }
 
 # Select external variables
-external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) 
+external <- dta[[1]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`,`Borough and Sub-Borough Area`) 
 for (i in 2:10) {
-  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`) %>%
+  dta[[i]] %>% select(contains("Window"),contains("Exterior Walls"),contains("Stairways"),contains("Condition of building"),contains("Number of Units"),contains("Stories"),contains("identifier"),Borough,`Tenure 1`,`Borough and Sub-Borough Area`) %>%
     bind_rows(external) -> 
     external
 }
@@ -27,7 +27,7 @@ for (i in 2:10) {
 external <- external %>% select(-`Condition of Stairways (Exterior and Interior): No interior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No exterior steps or stairways`,-`Condition of Stairways (Exterior and Interior): No stairways`)
 external$`Number of Units in Building` <- factor(external$`Number of Units in Building`)
 external$`Stories in building` <- factor(external$`Stories in building`)
-external <- external[,-c(7,22,23)]
+external <- external[,-c(7,23,24)]
 
 # Impute columns with 1,8,and 9
 external_imputed <- external
@@ -139,6 +139,7 @@ for (i in 1:7) {
 
 
 external_a <- external_a %>% mutate(Score = rowSums(.))
-ggplot(external_a) + geom_histogram(aes(x = Score), bin = 40)
-
+external_b <- cbind(external_a,external_imputed) 
+external_b <- external_b[,c(8,29)]
+sub <- external_b %>% group_by(`Borough and Sub-Borough Area`) %>% summarise(ex = mean(Score))
 
