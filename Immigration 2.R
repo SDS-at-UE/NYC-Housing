@@ -389,3 +389,5 @@ selfid %>% group_by(newincomerecode, newyear) %>% summarise(total = sum(`Househo
         title = element_text(size = 20)) +
   facet_wrap(~newyear)
 
+
+

@@ -45,7 +45,7 @@ nyc %>% filter(`Borough and Sub-Borough Area` < 200) %>% tm_shape() +
 # Brooklyn
 nyc %>% filter(`Borough and Sub-Borough Area` < 300 & `Borough and Sub-Borough Area` > 200) %>% tm_shape() +
   tm_fill("average",title="Quality Index", 
-          breaks = c(.48,.50,.52,.54,.56,.58,.60,.62,.64), palette="BuGn")  +
+          breaks = c(.46,.48,.50,.52,.54,.56,.58,.60), palette="BuGn")  +
   tm_borders(col = "black") +
   tm_text("code") +
   tm_add_legend(type = "text", labels = name[c(11:28)], text = c(201:218), col = "black") +
@@ -54,7 +54,7 @@ nyc %>% filter(`Borough and Sub-Borough Area` < 300 & `Borough and Sub-Borough A
 # Manhattan
 nyc %>% filter(`Borough and Sub-Borough Area` < 400 & `Borough and Sub-Borough Area` > 300) %>% tm_shape() +
   tm_fill("average",title="Quality Index", 
-          breaks = c(.48,.50,.52,.54,.56,.58,.60,.62,.64), palette="BuGn")  +
+          breaks = c(.48,.50,.52,.54,.56,.58,.60,.62), palette="BuGn")  +
   tm_borders(col = "black") +
   tm_text("code") +
   tm_add_legend(type = "text", labels = name[c(29:38)], text = c(301:310), col = "black") +
@@ -63,7 +63,7 @@ nyc %>% filter(`Borough and Sub-Borough Area` < 400 & `Borough and Sub-Borough A
 # Queens
 nyc %>% filter(`Borough and Sub-Borough Area` < 500 & `Borough and Sub-Borough Area` > 400) %>% tm_shape() +
   tm_fill("average",title="Quality Index", 
-          breaks = c(.48,.50,.52,.54,.56,.58,.60,.62,.64), palette="BuGn")  +
+          breaks = c(.46,.47,.48,.49,.50,.51), palette="BuGn")  +
   tm_borders(col = "black") +
   tm_text("code") +
   tm_add_legend(type = "text", labels = name[c(39:52)], text = c(401:414), col = "black") +
@@ -71,7 +71,8 @@ nyc %>% filter(`Borough and Sub-Borough Area` < 500 & `Borough and Sub-Borough A
 
 # Staten Island
 nyc %>% filter(`Borough and Sub-Borough Area` > 500) %>% tm_shape() +
-  tm_fill("average",title="Quality Index", palette="BuGn")  +
+  tm_fill("average",title="Quality Index", 
+          breaks = c(.44,.45,.46,.47,.48,.49,.50,.51), palette="BuGn")  +
   tm_borders(col = "black") +
   tm_text("code") +
   tm_add_legend(type = "text", labels = name[c(53:55)], text = c(501:503), col = "black") +
