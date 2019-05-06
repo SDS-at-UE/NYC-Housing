@@ -78,3 +78,23 @@ nyc %>% filter(`Borough and Sub-Borough Area` > 500) %>% tm_shape() +
   tm_add_legend(type = "text", labels = name[c(53:55)], text = c(501:503), col = "black") +
   tm_layout(legend.outside = TRUE, legend.text.size = 1,legend.title.size = 1.2)
 
+nyc %>% tm_shape() +
+  tm_fill("average",title="Quality Index", palette="BuGn")  +
+  tm_borders(col = "black") +
+  tm_layout(legend.text.size = 1.5,legend.title.size = 2.5)
+
+
+pog <- read_csv("Index_Data.csv")
+pog %>% group_by(Borough) %>% summarise(total = n(),
+                                        sumz = sum(final_index),
+                                        Average = sumz/total)
+pog$selfid <- NYC$`Moved to the U.S. as immigrant`
+pog %>% filter(selfid == 1) %>% group_by(Borough) %>% 
+  summarise(total = n(),
+            sumz = sum(final_index),
+            `Immigrant Average` = sumz/total)
+
+pog %>% filter(selfid == 0) %>% group_by(Borough) %>% 
+  summarise(total = n(),
+            sumz = sum(final_index),
+            `Non-Immigrant Average` = sumz/total) %>% View()

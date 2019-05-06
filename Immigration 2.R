@@ -26,10 +26,9 @@ selfid %>% group_by(Borough) %>% summarise(total = sum(`Household Sampling Weigh
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = as.factor(Borough), y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Natives vs. Immigrants", x = "Borough", y = "Percent", legend = "Type") +
-  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
-        legend.text = element_text(size = 15), legend.title = element_text(size = 15),
-        title = element_text(size = 20))
+  labs(x = "Borough", y = "Percent", legend = "Type") +
+  theme(axis.title = element_text(size = 20), axis.text = element_text(size = 20), 
+        legend.text = element_text(size = 20), legend.title = element_text(size = 20))
 
 ### Immigrants by year
 selfid %>% group_by(`Year Identifier`) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
@@ -383,11 +382,24 @@ selfid %>% group_by(newincomerecode, newyear) %>% summarise(total = sum(`Househo
   gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
   ggplot(aes(x = newincomerecode, y = percent)) + 
   geom_bar(aes(fill = type), stat = "identity") + 
-  labs(title = "Natives vs. Immigrants", x = "Householder Income", y = "Percent", legend = "Type") +
+  labs(title = "Natives vs. Immigrants", x = "Householder Income", 
+       y = "Percent", legend = "Type", las = 2) +
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
         legend.text = element_text(size = 15), legend.title = element_text(size = 15),
         title = element_text(size = 20)) +
   facet_wrap(~newyear)
 
-
-
+selfid %>% group_by(newincomerecode) %>% summarise(total = sum(`Household Sampling Weight (5 implied decimal places)`),
+                                                            total_immigrant = sum((`Moved to the U.S. as immigrant` == 1) * `Household Sampling Weight (5 implied decimal places)`), 
+                                                            total_native = sum(`Moved to the U.S. as immigrant` %in% c(2,9) * `Household Sampling Weight (5 implied decimal places)`),
+                                                            total_na = sum((`Moved to the U.S. as immigrant` == 8) * `Household Sampling Weight (5 implied decimal places)`),
+                                                            Immigrant = total_immigrant/total, Native = total_native/total,
+                                                            Unidentified = total_na/total) %>% 
+  gather(key = "type", value = "percent", Immigrant, Native, Unidentified) %>%
+  ggplot(aes(x = newincomerecode, y = percent)) + 
+  geom_bar(aes(fill = type), stat = "identity") + 
+  labs(x = "Householder Income", y = "Percent", legend = "Type", las = 2) +
+  theme(axis.title = element_text(size = 20), axis.text = element_text(size = 20), 
+        legend.text = element_text(size = 20), legend.title = element_text(size = 20)) +
+  scale_x_continuous(breaks = c(1.5,2.5,3.5,4.5,5.5), 
+                                        labels = c("25K", "50K", "75K", "100K", "1M"))
