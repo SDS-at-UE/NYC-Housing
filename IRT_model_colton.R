@@ -316,8 +316,8 @@ for (i in years) {
   NYC3 %>% bind_rows(results2) -> results2
 }
 
-library(scales)
-results2 %>% mutate(final_index = rescale(z1)) -> results2
+#library(scales)
+#results2 %>% mutate(final_index = rescale(z1)) -> results2
 
 cal_z <- function(x){
   exp(x)/(1+exp(x))
@@ -347,24 +347,75 @@ results %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) 
   geom_line() + labs(title = "Difficulty Over Years")
 
 results %>% filter(str_detect(problem, "^Condition")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
-  geom_line() + labs(title = "External Difficulty Over Years", y = "Difficulty", x = "Years") + 
+  geom_line(size = 1.5) + labs(title = "External Structure Problems", y = "Difficulty", x = "Years") + 
   scale_color_discrete(labels = c("Loose or hanging cornice,\n roofing, or other material",
                                   "Major cracks in outside walls", "Loose, broken, or missing stair",
                                   "Loose, broken, or missing steps",
                                   "Boarded up windows", "Broken or missing windows",
-                                  "Rotten or loose windows")) +  theme(legend.position = "bottom") +
+                                  "Rotten or loose windows")) +  
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.title = element_text(size = 15),
+        title = element_text(size = 15), legend.position = c(.72,.14), 
+        legend.text = element_text(size =10)) +
   ylim(1,9.5) -> graph1
-
+graph1
 
 results %>% filter(str_detect(tolower(problem), "holes")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
-  geom_line() + 
-  labs(title = "Internal Difficulty Over Years", y = "Difficulty", x = "Years") +  theme(legend.position = "bottom") + 
+  geom_line(size = 1.5) + 
+  labs(title = "Internal Structure Problems", y = "Difficulty", x = "Years") +  
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.title = element_text(size = 15),
+        title = element_text(size = 15), legend.position = c(.72,.95), 
+        legend.text = element_text(size =10)) + 
   ylim(1,9.5) -> graph2
+graph2
 
 results %>% filter(str_detect(problem, "equipment|mice|waterleakage")) %>% ggplot(aes(x = year, y = Dffclt, group = problem, color = problem)) + 
-  geom_line() + labs(title = "Internal Environment Difficulty Over Years", y = "Difficulty", x = "Years") +
-  theme(legend.position = "bottom") + ylim(1,9.5) -> graph3
-
+  geom_line(size =1.5) + labs(title = "Internal Environment Problems", y = "Difficulty", x = "Years") +
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.title = element_text(size = 15),
+        title = element_text(size = 15), legend.position = c(.72,.925),
+        legend.text = element_text(size =10)) + ylim(1,9.5) -> graph3
+graph3
 library(ggplot2)
 library(gridExtra)
 grid.arrange(graph1, graph2, graph3, ncol = 3)
+
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+multiplot(graph1, graph2, graph3, cols=3)
