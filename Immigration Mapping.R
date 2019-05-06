@@ -88,13 +88,34 @@ pog <- read_csv("Index_Data.csv")
 pog %>% group_by(Borough) %>% summarise(total = n(),
                                         sumz = sum(final_index),
                                         Average = sumz/total)
-pog$selfid <- NYC$`Moved to the U.S. as immigrant`
-pog %>% filter(selfid == 1) %>% group_by(Borough) %>% 
+pog$`Moved to the U.S. as immigrant` <- NYC$`Moved to the U.S. as immigrant`
+pog %>% filter(`Moved to the U.S. as immigrant` == 1) %>% group_by(Borough) %>% 
   summarise(total = n(),
             sumz = sum(final_index),
             `Immigrant Average` = sumz/total)
 
-pog %>% filter(selfid == 0) %>% group_by(Borough) %>% 
+pog %>% 
+  filter(`Moved to the U.S. as immigrant` == 2 | `Moved to the U.S. as immigrant` == 9) %>%
+  group_by(Borough) %>% 
   summarise(total = n(),
             sumz = sum(final_index),
-            `Non-Immigrant Average` = sumz/total) %>% View()
+            `Non-Immigrant Average` = sumz/total)
+
+pog %>% mutate(selfid = case_when(`Moved to the U.S. as immigrant` == 1 ~ "Immigrant",
+                                  `Moved to the U.S. as immigrant` == 2 | `Moved to the U.S. as immigrant` == 9 ~ "Native",
+                                  TRUE ~ "Unidentified")) -> pog
+
+pog$type <- as.factor(pog$selfid)
+
+
+##### GRAPHS BY IMMIGRANTS
+# By borough
+by_borough <- pog %>% group_by(Borough,type) %>% summarise(Score = mean(final_index))
+by_borough <- by_borough %>% mutate(Score1 = format(Score, digits = 3))
+ggplot(by_borough,aes(x = Borough, y = Score, fill = type)) + 
+  geom_bar(stat="identity",position="dodge") + 
+  geom_text(aes(label=Score1, x = Borough, y = Score, vjust=-1.5), size = 4.6,
+            position = position_dodge(width = 0.9)) +
+  ylim(0.0,.65) + 
+  theme(axis.title = element_text(size = 20), axis.text = element_text(size = 20), 
+        legend.text = element_text(size = 20), legend.title = element_text(size = 20))
