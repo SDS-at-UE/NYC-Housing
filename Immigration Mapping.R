@@ -102,15 +102,16 @@ pog %>%
             `Non-Immigrant Average` = sumz/total)
 
 pog %>% mutate(selfid = case_when(`Moved to the U.S. as immigrant` == 1 ~ "Immigrant",
-                                  `Moved to the U.S. as immigrant` == 2 | `Moved to the U.S. as immigrant` == 9 ~ "Native",
-                                  TRUE ~ "Unidentified")) -> pog
+                                  `Moved to the U.S. as immigrant` == 2 | 
+                                    `Moved to the U.S. as immigrant` == 9 ~ "Native")) -> pog
 
 pog$type <- as.factor(pog$selfid)
+pog2 <- na.exclude(pog)
 
 
 ##### GRAPHS BY IMMIGRANTS
 # By borough
-by_borough <- pog %>% group_by(Borough,type) %>% summarise(Score = mean(final_index))
+by_borough <- pog2 %>% group_by(Borough,type) %>% summarise(Score = mean(final_index))
 by_borough <- by_borough %>% mutate(Score1 = format(Score, digits = 3))
 ggplot(by_borough,aes(x = Borough, y = Score, fill = type)) + 
   geom_bar(stat="identity",position="dodge") + 
